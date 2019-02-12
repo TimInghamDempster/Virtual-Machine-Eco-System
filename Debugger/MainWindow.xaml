@@ -15,7 +15,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-
+        <!-- Command bar -->
         <StackPanel Orientation="Horizontal" Grid.Row="0">
             <Button Content="Step" Command="{Binding StepVMCommand}" />
             <Button Content="{Binding StartStop}" Command="{Binding StartStopCommand}"/>
@@ -23,6 +23,7 @@
             <TextBlock Text="{Binding InstructionPointer}" Margin="10 0 0 0"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal"  Grid.Row="1">
+            <!-- Instruction window -->
             <ListBox ItemsSource="{Binding InstructionStream}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -40,6 +41,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <!-- Register window -->
             <ListBox ItemsSource="{Binding Registers}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>

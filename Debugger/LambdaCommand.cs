@@ -7,6 +7,10 @@ using System.Windows.Input;
 
 namespace Debugger
 {
+    /// <summary>
+    /// Very simple command implementation that just takes lambdas to
+    /// define Execute and (optionally) CanExecute
+    /// </summary>
     public class LambdaCommand : ICommand
     {
         Action<object> OnExecute = (o) => { };
