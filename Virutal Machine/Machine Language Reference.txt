@@ -1,0 +1,29 @@
+Machine Language Reference
+
+Instructions are made of two uints.
+The first takes the form of four bytes:
+ExecutionUnit | InstructionNumber | TargetRegister | SourceRegister
+Not all instructions use both (or any) registers
+The second value is an argument
+
+ALUOperations
+	AddLiteral adds the number in the argument to the source register and stores in the target register
+	SetLiteral sets the specified register to the number in the argument
+	CopyRegister sets the specified register to the value of the register specified in the argument
+	
+StoreOperations
+	StoreToRegisterLocation stores the value in the source register to the address computed as the target register plus the offset specified in the argument
+	StoreToLiteralLocation stores the value in the source register to the address in the argument
+	
+LoadOperations
+	LoadFromRegisterLocation loads a value from the location computed from the source register plus the offset in the argument into the target register
+
+BranchOperations
+	Jump jumps execution to the address specified in the argument
+	JumpNotEqual jumps execution to the address specified in the argument if the value of the source register is not equal to the value of the destination register
+	Break triggers a breakpoint
+	
+InterruptController
+	SetInterrupt sets the pointer for the interrupt specified in the instruction to the pointer specified in the argument
+	CallInterrupt Not Implemented Yet
+	InterruptReturn set the instructionPointer back to the position stored before the interrupt

@@ -1,0 +1,8 @@
+Program ==> Statement {Statement}
+Statement ==> Declaration | Assignment | ASM
+Declaration ==> "int" {"'"} Label ";"
+Assignment ==> Label "=" Expression ";"
+Expression ==> Primitive {BinaryOperator Primitive}
+Primitive ==> Integer | "(" Expression ")" | UnaryOperator Primitive | Label
+BinaryOperator ==> "+" | "-" | "*" | "/"
+UnaryOperator ==> "-"

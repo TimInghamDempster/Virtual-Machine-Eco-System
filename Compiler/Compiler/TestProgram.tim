@@ -1,0 +1,183 @@
+<asm>
+ALU       SetLiteral                  0  0 3601				// Set register 0 to address 6 (keyboard ISR address)
+Store     StoreToLiteralLocation      0  0 32					// Write keyboard ISR address from register 0 to PIC
+
+// Set up block device interrupt handler
+ALU       SetLiteral                  0  0 3605				// Set register 0 to address 10 (SSD ISR address)
+Store     StoreToLiteralLocation      0  0 33 				// Write block device ISR address from register 0 to PIC
+Branch    Jump                        0  0 3629				// Jump to program start
+
+// Keyboard interrupt handler
+Load      LoadFromLiteralLocation    15  0 3588				// Copy last key pressed into register 9
+Interrupt InterruptReturn             0  0 0					// Return to execution
+
+// Block device interrupt handler
+Store     StoreToLiteralLocation     15  0 134221319	// Acknowledge so device stops skwaking
+Interrupt InterruptReturn             0  0 0					// Return to execution
+
+
+// Write string
+ALU       SetLiteral                  4  0 0					// Put loop pos into register 4
+Load      LoadFromRegisterLocation    5  2 0					// Load next char into register 2
+Store     StoreToRegisterLocation     1  5 1536				// Store char from register 2 to (display + register 1)
+ALU       AddLiteral                  1  1 1					// Increment cursor pos
+ALU       AddLiteral                  2  2 1					// Increment string pos
+ALU       AddLiteral                  4  4 1					// Increment loop pos
+Branch    JumpLess                    0  4 3611				// Loop if not written enough characters
+
+// Flush Screen
+ALU       SetLiteral                  0  0 0					// Set the screen refresh command into register 0
+Store     StoreToLiteralLocation      0  0 3584				// Write refresh command to display command buffer.
+
+// Jump back
+Branch    JumpRegister                0  3 0					// Jump to location passed in r3
+
+// Draw hello string
+ALU       SetLiteral                  0  0 24					// Put string length into register 0
+ALU       SetLiteral                  1  0 0		  		// Put desired cursor pos into register 1
+ALU       SetLiteral                  2  0 3763				// Put desired string pos into register
+ALU       SetLiteral                  3  0 3639				// Set return pointer
+Branch    Jump                        0  0 3609				// Jump to string writing function
+
+// Handle keyboard input
+ALU       SetLiteral                  0  0 0					//  Setup Char counter
+ALU       SetLiteral                  2  0 13					// Add newline char to r2 for comparison
+Branch    JumpEqual                  15 14 3641					// Loop until key pressed
+Branch    JumpEqual                  15  2 3661					// Break if enter pressed
+Store     StoreToRegisterLocation     0 15 1615					// Store char to second line of display
+ALU       SetLiteral                  1  0 0					// Set the screen refresh command into register 1
+Store     StoreToLiteralLocation      0  1 3584					// Write refresh command to display command buffer.
+ALU       AddLiteral                  0  0 1					// Increment char counter
+Store     StoreToLiteralLocation      0  0 3589					// Store string length to memory
+Store     StoreToRegisterLocation     0 15 3589					// Store character at end of string
+ALU       SetLiteral                 15  0 0					// Re-set character register
+Branch    Jump                        0  0 3641					// Loop back and wait for next character
+
+// Draw response string
+ALU       SetLiteral                  0  0 21					// Put string length into register 0
+ALU       SetLiteral                  1  0 158					// Put desired cursor pos into register 1
+ALU       SetLiteral                  2  0 3787					// Put desired string pos into register
+ALU       SetLiteral                  3  0 3669					// Set return pointer
+Branch    Jump                        0  0 3609					// Jumpt to string writing function
+
+// Draw name string.  Dynamic string drawing based on user input, shiny!
+Load      LoadFromLiteralLocation     0  0 3589					// Put string length into register 0
+ALU       SetLiteral                  1  0 180					// Put desired cursor pos into register 1
+ALU       SetLiteral                  2  0 3590					// Put desired string pos into register
+ALU       SetLiteral                  3  0 604					// Set return pointer
+Branch    Jump                        0  0 530					// Jumpt to string writing function
+
+// Draw second query string
+ALU       SetLiteral                  0  0 5					// Put string length into register 0
+ALU       SetLiteral                  1  0 237					// Put desired cursor pos into register 1
+ALU       SetLiteral                  2  0 729					// Put desired string pos into register
+ALU       SetLiteral                  3  0 614					// Set return pointer
+Branch     Jump                        0  0 530					// Jumpt to string writing function
+
+// Load name from ssd
+ALU       SetLiteral                  0  0 0					// Set the block we want into register 0
+Store     StoreToLiteralLocation      0  0 134221317			// Set storage to address in register 0
+Load      LoadFromLiteralLocation     1  0 3589					// Load existing space used in memory
+ALU       AddLiteral                  1  1 1					// Move to next free slot in memory
+ALU       SetLiteral                  2  2 0					// Initialise register 2 as length counter
+Load      LoadFromLiteralLocation     3  0 134221318			// Load a value from SSD into register 3
+Store     StoreToRegisterLocation     1  3 3589					// Store value to location in RAM
+ALU       AddLiteral                  1  1 1					// Increment RAM pointer
+ALU       AddLiteral                  2  2 1					// Increment string length
+Branch    JumpNotEqual                0  3 624					// Jump back for the next character if current one not null
+
+// Write second name to display
+ALU       AddLiteral                  0  2 0					// Copy string length from register 2 to register 0
+ALU       SetLiteral                  1  0 243					// Set desired cursor pos
+Load      LoadFromLiteralLocation     2  0 3589					// Set string pos to end of first string in ram
+ALU       AddLiteral                  2  2 1					// Move string pos to start of second string in ram
+ALU       AddLiteral                  2  2 3589					// Add location of RAM to string start address
+ALU       SetLiteral                  3  0 648					// Set return pointer
+Branch    Jump                        0  0 530					// Jumpt to string writing function
+
+// Write question mark
+ALU       SetLiteral                  2  0 63			// Set register 1 to "?"
+ALU       AddLiteral                  1  1 -1					// Backspace the null character we accidentally wrote
+Store     StoreToRegisterLocation     1  2 1536					// Write "?" to screen
+ALU       SetLiteral                  0  0 0					// Set the screen refresh command into register 0
+Store     StoreToLiteralLocation      0  0 3584					// Write refresh command to display command buffer.
+
+// Write current name to ssd
+ALU       SetLiteral                  0  0 0					// Set the block we want into register 0
+Store     StoreToLiteralLocation      0  0 134221317			// Flush the fifo
+ALU       SetLiteral                  4  0 0					// Initialise char counter
+Load      LoadFromLiteralLocation     1  0 3589					// Find how many chars to write
+ALU       SetLiteral                  2  0 1					// Set start pointer into register 2
+ALU       AddLiteral                  2  2 3589					// Add RAM address to char pointer
+Load      LoadFromRegisterLocation    3  2 0					// Load char from RAM
+Store     StoreToLiteralLocation      0  3 134221318			// Store char to fifo
+ALU       AddLiteral                  2  2 1					// Increment char pointer
+ALU       AddLiteral                  4  4 1					// Increment char count
+Branch    JumpLess                    4  1 670	// Loop back for next char
+Store     StoreToLiteralLocation      0  0 134221318			// Send a terminating null
+Store     StoreToLiteralLocation      0  0 134221317			// Flush the block
+
+// Data section
+// "hello, what's your name?"
+Data 0x00000068
+Data 0x00000065
+Data 0x0000006c
+Data 0x0000006c
+Data 0x0000006f
+Data 0x0000002c
+
+Data 0x00000020
+Data 0x00000077
+Data 0x00000068
+Data 0x00000061
+Data 0x00000074
+Data 0x00000027
+Data 0x00000073
+
+Data 0x00000020
+Data 0x00000079
+Data 0x0000006f
+Data 0x00000075
+Data 0x00000072
+
+Data 0x00000020
+Data 0x0000006e
+Data 0x00000061
+Data 0x0000006d
+Data 0x00000065
+Data 0x0000003f
+
+// "It's nice to meet you "
+Data 0x00000049
+Data 0x00000074
+Data 0x00000027
+Data 0x00000073
+Data 0x00000020
+
+Data 0x0000006e
+Data 0x00000069
+Data 0x00000063
+Data 0x00000065
+Data 0x00000020
+
+Data 0x00000074
+Data 0x0000006f
+Data 0x00000020
+
+Data 0x0000006d
+Data 0x00000065
+Data 0x00000065
+Data 0x00000074
+Data 0x00000020
+
+Data 0x00000079
+Data 0x0000006f
+Data 0x00000075
+
+// "how's"
+Data 0x00000068
+Data 0x0000006f
+Data 0x00000077
+Data 0x00000027
+Data 0x00000073
+</asm>
