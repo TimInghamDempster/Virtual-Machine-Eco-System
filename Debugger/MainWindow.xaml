@@ -7,9 +7,6 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525"
         SizeToContent="WidthAndHeight">
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -17,30 +14,20 @@
         </Grid.RowDefinitions>
         <!-- Command bar -->
         <StackPanel Orientation="Horizontal" Grid.Row="0">
-            <Button Content="Step" Command="{Binding StepVMCommand}" />
+            <Button Content="Step" Command="{Binding StepVirtualMachineCommand}" />
             <Button Content="{Binding StartStop}" Command="{Binding StartStopCommand}"/>
             <TextBlock Text="InstructionPointer"/>
             <TextBlock Text="{Binding InstructionPointer}" Margin="10 0 0 0"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal"  Grid.Row="1">
-            <!-- Instruction window -->
-            <ListBox ItemsSource="{Binding InstructionStream}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" DataContext="{Binding Value}">
-                            <CheckBox IsChecked="{Binding IsBreakpoint, Mode=OneWayToSource}"/>
-                            <TextBlock Text="->" Visibility="{Binding IsCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
-                            <TextBlock Text="" Visibility="{Binding IsNotCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
-                            <TextBlock Text="{Binding Location}" Width="50"/>
-                            <TextBlock Text="{Binding ExecutionUnit}" Width="200"/>
-                            <TextBlock Text="{Binding Instruction}" Width="200"/>
-                            <TextBlock Text="{Binding Arg1}" Width="200"/>
-                            <TextBlock Text="{Binding Arg2}" Width="200"/>
-                            <TextBlock Text="{Binding Arg3}" Width="200"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <!-- Main window -->
+            <TabControl>
+                <TabItem Header="Assembly">
+                    <TabItem.Content>
+                        <local:AssemblyWindow DataContext="{Binding AssemblyViewModel}"/>
+                    </TabItem.Content>
+                </TabItem>
+            </TabControl>
             <!-- Register window -->
             <ListBox ItemsSource="{Binding Registers}">
                 <ListBox.ItemTemplate>

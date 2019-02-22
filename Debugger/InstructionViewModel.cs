@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Debugger
 {
@@ -12,15 +9,17 @@ namespace Debugger
     /// </summary>
     public class InstructionViewModel : INotifyPropertyChanged
     {
-        bool m_isCurrentInstruction;
-        bool m_isBreakpoint;
-        int m_location;
+        bool _isCurrentInstruction;
+        UInt32 _location;
+        private HashSet<UInt32> _breakpoints;
 
         public event PropertyChangedEventHandler PropertyChanged;
         
         // Notify the main debugger that a breakpoint has been set
         // or unset on us
-        public event Action<int, bool> BreakpointChanged;
+        public event Action BreakpointChanged;
+
+        public UInt32 LocationInt => _location;
 
         // The contents of the instruction translated into human readable strings
         public String Location { get; private set; }
@@ -32,8 +31,8 @@ namespace Debugger
 
         public bool IsBreakpoint
         {
-            get { return m_isBreakpoint; }
-            set { m_isBreakpoint = value; BreakpointChanged?.Invoke(m_location, value); }
+            get { return _breakpoints.Contains(LocationInt); }
+            set {  BreakpointChanged?.Invoke(); }
         }
 
         // The current instruction has a marker next to it so that the user
@@ -42,13 +41,13 @@ namespace Debugger
         {
             get
             {
-                return m_isCurrentInstruction;
+                return _isCurrentInstruction;
             }
             set
             {
-                m_isCurrentInstruction = value;
-                OnPropetyChanged("IsCurrentInstruction");
-                OnPropetyChanged("IsNotCurrentInstruction");
+                _isCurrentInstruction = value;
+                OnPropetyChanged(nameof(IsCurrentInstruction));
+                OnPropetyChanged(nameof(IsNotCurrentInstruction));
             }
         }
 
@@ -56,10 +55,10 @@ namespace Debugger
         // without changing row width
         public bool IsNotCurrentInstruction { get { return !IsCurrentInstruction; } }
 
-        public InstructionViewModel(int location, int instruction1, int instruction2)
+        public InstructionViewModel(UInt32 location, int instruction1, int instruction2, HashSet<UInt32> breakpoints)
         {
             Location = location.ToString();
-            m_location = location;
+            _location = location;
 
             //The unit is always the first byte of an instruction and maps directly
             // to the enum
@@ -73,6 +72,8 @@ namespace Debugger
             Arg2 = (instruction1 & 0xFF).ToString();
             // Arg3 is the second instruction word
             Arg3 = instruction2.ToString();
+
+            _breakpoints = breakpoints;
         }
 
         /// <summary>

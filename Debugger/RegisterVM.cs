@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Debugger
 {
+    /// <summary>
+    /// Provides functionality to display the state of the VM registers
+    /// </summary>
     public class RegisterViewModel : INotifyPropertyChanged
     {
         int val;
@@ -25,7 +28,7 @@ namespace Debugger
             if(val != value)
             {
                 val = value;
-                OnPropertyChanged("Value");
+                OnPropertyChanged(nameof(Value);
             }
         }
 

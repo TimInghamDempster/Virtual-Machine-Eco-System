@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="Debugger.AssemblyWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Debugger"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+    <Grid>
+        <ListBox ItemsSource="{Binding InstructionStream}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" DataContext="{Binding Value}">
+                        <CheckBox IsChecked="{Binding IsBreakpoint, Mode=TwoWay, FallbackValue=False}"/>
+                        <TextBlock Text="->" Visibility="{Binding IsCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
+                        <TextBlock Text="" Visibility="{Binding IsNotCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
+                        <TextBlock Text="{Binding Location}" Width="50"/>
+                        <TextBlock Text="{Binding ExecutionUnit}" Width="200"/>
+                        <TextBlock Text="{Binding Instruction}" Width="200"/>
+                        <TextBlock Text="{Binding Arg1}" Width="200"/>
+                        <TextBlock Text="{Binding Arg2}" Width="200"/>
+                        <TextBlock Text="{Binding Arg3}" Width="200"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

@@ -58,7 +58,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AssemblyViewModel.cs" />
+    <Compile Include="AssemblyWindow.xaml.cs">
+      <DependentUpon>AssemblyWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RegisterVM.cs" />
+    <Compile Include="ViewModelBase.cs" />
+    <Page Include="AssemblyWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -67,7 +76,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DebuggerVM.cs" />
+    <Compile Include="MainWindowViewModel.cs" />
     <Compile Include="InstructionViewModel.cs" />
     <Compile Include="LambdaCommand.cs" />
     <Compile Include="MainWindow.xaml.cs">
