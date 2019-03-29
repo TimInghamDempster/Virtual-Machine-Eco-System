@@ -23,9 +23,9 @@ namespace Compiler
             {
                 SyntaxNode abstractSyntaxTree = new SyntaxNode();
                 bool parsed = m_parser.Parse(tokenStream, abstractSyntaxTree);
-                bool semanticallySound = m_semantics.DoSemanticAnalysis(abstractSyntaxTree);
+                bool semanticallySound = m_semantics.DoSemanticAnalysis(abstractSyntaxTree, (int)Virtual_Machine.VirtualMachine.RAMSize - 1);
 
-                var stream = m_codeGenerator.GenerateCode(abstractSyntaxTree, m_semantics.VariableTable);
+                var stream = m_codeGenerator.GenerateCode(abstractSyntaxTree, m_semantics.VariableTable, m_semantics.TagTable);
 
                 VMUtils.BlockDeviceWriter.WriteForBlockDevice("MainDrive", stream);
 

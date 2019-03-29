@@ -28,7 +28,7 @@ namespace Debugger
             if(val != value)
             {
                 val = value;
-                OnPropertyChanged(nameof(Value);
+                OnPropertyChanged(nameof(Value));
             }
         }
 

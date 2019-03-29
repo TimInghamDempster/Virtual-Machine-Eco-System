@@ -23,69 +23,69 @@ namespace Virtual_Machine
 
 	class ArithmeticLogicUnit
 	{
-		CPUCore m_CPUCore;
+		CPUCore _CPUCore;
 
-		int[] m_currentInstruction;
-		int[] m_registers;
-		bool m_hasInstruction;
+		int[] _currentInstruction;
+		int[] _registers;
+		bool _hasInstruction;
 
 		public ArithmeticLogicUnit(CPUCore cPUCore, int[] registers)
 		{
-			m_CPUCore = cPUCore;
-			m_registers = registers;
+			_CPUCore = cPUCore;
+			_registers = registers;
 		}
 
 		public void Tick()
 		{
-			if (m_CPUCore.CurrentStage == PipelineStages.Execution && m_hasInstruction == true)
+			if (_CPUCore.CurrentStage == PipelineStages.Execution && _hasInstruction == true)
 			{
-				ALUOperations instructionCode = (ALUOperations)(m_currentInstruction[0] & 0x00ff0000);
-				int targetRegister = (m_currentInstruction[0] & 0x0000ff00) >> 8;
-				int sourceRegister = m_currentInstruction[0] & 0x000000ff;
+				ALUOperations instructionCode = (ALUOperations)(_currentInstruction[0] & 0x00ff0000);
+				int targetRegister = (_currentInstruction[0] & 0x0000ff00) >> 8;
+				int sourceRegister = _currentInstruction[0] & 0x000000ff;
 				switch (instructionCode)
 				{
 
 					case ALUOperations.Add:
-						m_registers[targetRegister] = m_registers[sourceRegister] + m_registers[m_currentInstruction[1]];
+						_registers[targetRegister] = _registers[sourceRegister] + _registers[_currentInstruction[1]];
 						break;
 					case ALUOperations.AddLiteral:
-						m_registers[targetRegister] = m_registers[sourceRegister] + m_currentInstruction[1];
+						_registers[targetRegister] = _registers[sourceRegister] + _currentInstruction[1];
 						break;
 					case ALUOperations.Subtract:
-						m_registers[targetRegister] = m_registers[sourceRegister] - m_registers[m_currentInstruction[1]];
+						_registers[targetRegister] = _registers[sourceRegister] - _registers[_currentInstruction[1]];
 						break;
 					case ALUOperations.SubtractLiteral:
-						m_registers[targetRegister] = m_registers[sourceRegister] - m_currentInstruction[1];
+						_registers[targetRegister] = _registers[sourceRegister] - _currentInstruction[1];
 						break;
 					case ALUOperations.Multiply:
-						m_registers[targetRegister] = m_registers[sourceRegister] * m_registers[m_currentInstruction[1]];
+						_registers[targetRegister] = _registers[sourceRegister] * _registers[_currentInstruction[1]];
 						break;
 					case ALUOperations.MultiplyLiteral:
-						m_registers[targetRegister] = m_registers[sourceRegister] * m_currentInstruction[1];
+						_registers[targetRegister] = _registers[sourceRegister] * _currentInstruction[1];
 						break;
 					case ALUOperations.Divide:
-						m_registers[targetRegister] = m_registers[sourceRegister] / m_registers[m_currentInstruction[1]];
+						_registers[targetRegister] = _registers[sourceRegister] / _registers[_currentInstruction[1]];
 						break;
 					case ALUOperations.DivideLiteral:
-						m_registers[targetRegister] = m_registers[sourceRegister] / m_currentInstruction[1];
+						_registers[targetRegister] = _registers[sourceRegister] / _currentInstruction[1];
 						break;
 					case ALUOperations.SetLiteral:
-						m_registers[targetRegister] = m_currentInstruction[1];
+						_registers[targetRegister] = _currentInstruction[1];
 						break;
 					case ALUOperations.Copy:
-						m_registers[targetRegister] = m_registers[sourceRegister];
+						_registers[targetRegister] = _registers[sourceRegister];
 						break;
 				}
-				m_hasInstruction = false;
-				m_CPUCore.NextStage = PipelineStages.BranchPredict;
+				_hasInstruction = false;
+				_CPUCore.NextStage = PipelineStages.BranchPredict;
                 VirtualMachine.Counters.InstructionsExecuted++;
 			}
 		}
 
 		public void SetInstruction(int[] instruction)
 		{
-			m_hasInstruction = true;
-			m_currentInstruction = instruction;
+			_hasInstruction = true;
+			_currentInstruction = instruction;
 		}
 	}
 }

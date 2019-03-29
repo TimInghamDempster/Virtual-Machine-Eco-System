@@ -51,8 +51,8 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="TestProgram.tim">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>

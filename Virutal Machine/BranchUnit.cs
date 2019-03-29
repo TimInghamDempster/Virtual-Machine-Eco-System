@@ -16,114 +16,186 @@ namespace Virtual_Machine
 		JumpLess = 5 << 16,
 		Break = 6 << 16,
 		JumpRegister = 7 << 16,
-	}
+        JumpNotEqualRegister = 8 << 16,
+        JumpEqualRegister = 9 << 16,
+        JumpLessEqualRegister = 10 << 16,
+        JumpLessRegister = 11 << 16
+    }
 
 	class BranchUnit
 	{
-		CPUCore m_CPUCore;
-		int[] m_currentOp;
-		int[] m_registers;
+		CPUCore _CPUCore;
+		int[] _currentOp;
+		int[] _registers;
 		Action<uint> SetInstructionPointer;
-		bool m_hasInstruction;
+		bool _hasInstruction;
 
 		public BranchUnit(CPUCore cPUCore, int[] registers, Action<uint> setInstructionPointer)
 		{
-			m_CPUCore = cPUCore;
-			m_registers = registers;
+			_CPUCore = cPUCore;
+			_registers = registers;
 			SetInstructionPointer = setInstructionPointer;
 		}
 
 		public void Tick()
 		{
-			if (m_CPUCore.CurrentStage == PipelineStages.BranchPredict)
+			if (_CPUCore.CurrentStage == PipelineStages.BranchPredict)
 			{
-				if (m_hasInstruction)
+				if (_hasInstruction)
 				{
-					switch ((BranchOperations)(m_currentOp[0] & 0x00ff0000))
+					switch ((BranchOperations)(_currentOp[0] & 0x00ff0000))
 					{
 						case BranchOperations.Nop:
 							{
-								SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
+								SetInstructionPointer(_CPUCore.InstructionPointer + 2);
 							} break;
 						case BranchOperations.Jump:
 							{
-								SetInstructionPointer((uint)m_currentOp[1]);
-								m_hasInstruction = false;
+								SetInstructionPointer((uint)_currentOp[1]);
+								_hasInstruction = false;
 							} break;
 						case BranchOperations.JumpRegister:
 							{
-								SetInstructionPointer((uint)m_registers[m_currentOp[0] & 0xff] + (uint)m_currentOp[1]);
-								m_hasInstruction = false;
+								SetInstructionPointer((uint)_registers[_currentOp[0] & 0x000000ff] + (uint)_currentOp[1]);
+								_hasInstruction = false;
 							} break;
 						case BranchOperations.JumpNotEqual:
 							{
-								int register1 = (m_currentOp[0] >> 8) & 0x000000ff;
-								int register2 = m_currentOp[0] & 0x000000ff;
+								int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+								int register2 = _currentOp[0] & 0x000000ff;
 
-								if(m_registers[register1] != m_registers[register2])
+								if(_registers[register1] != _registers[register2])
 								{
-									SetInstructionPointer((uint)m_currentOp[1]);
+									SetInstructionPointer((uint)_currentOp[1]);
 								}
 								else
 								{
-									SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
+									SetInstructionPointer(_CPUCore.InstructionPointer + 2);
 								}
-								m_hasInstruction = false;
+								_hasInstruction = false;
 							}break;
 						case BranchOperations.JumpEqual:
 							{
-								int register1 = (m_currentOp[0] >> 8) & 0x000000ff;
-								int register2 = m_currentOp[0] & 0x000000ff;
+								int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+								int register2 = _currentOp[0] & 0x000000ff;
 
-								if (m_registers[register1] == m_registers[register2])
+								if (_registers[register1] == _registers[register2])
 								{
-									SetInstructionPointer((uint)m_currentOp[1]);
+									SetInstructionPointer((uint)_currentOp[1]);
 								}
 								else
 								{
-									SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
+									SetInstructionPointer(_CPUCore.InstructionPointer + 2);
 								}
-								m_hasInstruction = false;
+								_hasInstruction = false;
 							} break;
 						case BranchOperations.JumpLess:
 							{
-								int register1 = (m_currentOp[0] >> 8) & 0x000000ff;
-								int register2 = m_currentOp[0] & 0x000000ff;
+								int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+								int register2 = _currentOp[0] & 0x000000ff;
 
-								if (m_registers[register1] < m_registers[register2])
+								if (_registers[register1] < _registers[register2])
 								{
-									SetInstructionPointer((uint)m_currentOp[1]);
+									SetInstructionPointer((uint)_currentOp[1]);
 								}
 								else
 								{
-									SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
+									SetInstructionPointer(_CPUCore.InstructionPointer + 2);
 								}
-								m_hasInstruction = false;
+								_hasInstruction = false;
 							} break;
 						case BranchOperations.JumpLessEqual:
 							{
-								int register1 = (m_currentOp[0] >> 8) & 0x000000ff;
-								int register2 = m_currentOp[0] & 0x000000ff;
+								int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+								int register2 = _currentOp[0] & 0x000000ff;
 
-								if (m_registers[register1] <= m_registers[register2])
+								if (_registers[register1] <= _registers[register2])
 								{
-									SetInstructionPointer((uint)m_currentOp[1]);
+									SetInstructionPointer((uint)_currentOp[1]);
 								}
 								else
 								{
-									SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
+									SetInstructionPointer(_CPUCore.InstructionPointer + 2);
 								}
-								m_hasInstruction = false;
+								_hasInstruction = false;
 							} break;
-						case BranchOperations.Break:
+                        case BranchOperations.JumpNotEqualRegister:
+                        {
+                            int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+                            int register2 = _currentOp[0] & 0x000000ff;
+                            int target = _registers[_currentOp[1]];
+
+                            if (_registers[register1] != _registers[register2])
+                            {
+                                SetInstructionPointer((uint)target);
+                            }
+                            else
+                            {
+                                SetInstructionPointer(_CPUCore.InstructionPointer + 2);
+                            }
+                            _hasInstruction = false;
+                        }
+                            break;
+                        case BranchOperations.JumpEqualRegister:
+                        {
+                            int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+                            int register2 = _currentOp[0] & 0x000000ff;
+                            int target = _registers[_currentOp[1]];
+
+                            if (_registers[register1] == _registers[register2])
+                            {
+                                SetInstructionPointer((uint)target);
+                            }
+                            else
+                            {
+                                SetInstructionPointer(_CPUCore.InstructionPointer + 2);
+                            }
+                            _hasInstruction = false;
+                        }
+                            break;
+                        case BranchOperations.JumpLessRegister:
+                        {
+                            int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+                            int register2 = _currentOp[0] & 0x000000ff;
+                            int target = _registers[_currentOp[1]];
+
+                            if (_registers[register1] < _registers[register2])
+                            {
+                                SetInstructionPointer((uint)target);
+                            }
+                            else
+                            {
+                                SetInstructionPointer(_CPUCore.InstructionPointer + 2);
+                            }
+                            _hasInstruction = false;
+                        }
+                            break;
+                        case BranchOperations.JumpLessEqualRegister:
+                        {
+                            int register1 = (_currentOp[0] >> 8) & 0x000000ff;
+                            int register2 = _currentOp[0] & 0x000000ff;
+                            int target = _registers[_currentOp[1]];
+
+                            if (_registers[register1] <= _registers[register2])
+                            {
+                                SetInstructionPointer((uint)target);
+                            }
+                            else
+                            {
+                                SetInstructionPointer(_CPUCore.InstructionPointer + 2);
+                            }
+                            _hasInstruction = false;
+                        }
+                            break;
+                        case BranchOperations.Break:
 							{
 								/*if(!System.Diagnostics.Debugger.IsAttached)
 								{
 									System.Diagnostics.Debugger.Launch();
 								}
 								System.Diagnostics.Debugger.Break();*/
-								SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
-								m_hasInstruction = false;
+								SetInstructionPointer(_CPUCore.InstructionPointer + 2);
+								_hasInstruction = false;
                                 //Console.ReadLine();
 							}break;
 					}
@@ -131,16 +203,16 @@ namespace Virtual_Machine
 				}
 				else
 				{
-					SetInstructionPointer(m_CPUCore.InstructionPointer + 2);
+					SetInstructionPointer(_CPUCore.InstructionPointer + 2);
 				}
-				m_CPUCore.NextStage = PipelineStages.InstructionDispatch;
+				_CPUCore.NextStage = PipelineStages.InstructionDispatch;
 			}
 		}
 
 		public void SetInstruction(int[] instruction)
 		{
-			m_currentOp = instruction;
-			m_hasInstruction = true;
+			_currentOp = instruction;
+			_hasInstruction = true;
 		}
 	}
 }

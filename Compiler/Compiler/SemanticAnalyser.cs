@@ -8,21 +8,26 @@ namespace Compiler
 {
     class VariableEntry
     {
-        public int m_address;
-        public bool m_initialised;
+        public int Address { get; set; }
+        public bool Initialised { get; set; }
+    }
+
+    public class Tag
+    {
+        public int Value { get; set; }
+        public List<int> InstructionLocations { get; } = new List<int>();
     }
 
     class SemanticAnalyser
     {
-        Dictionary<string, VariableEntry> m_variableTable;
-        int m_nextAddress;
+        int _nextAddress;
 
-        public Dictionary<string, VariableEntry> VariableTable { get { return m_variableTable; } }
+        public Dictionary<string, VariableEntry> VariableTable { get; } = new Dictionary<string, VariableEntry>();
+        public Dictionary<string, Tag> TagTable { get; } = new Dictionary<string, Tag>();
 
-        public bool DoSemanticAnalysis(SyntaxNode programTree)
+        public bool DoSemanticAnalysis(SyntaxNode programTree, int stackBase)
         {
-            m_variableTable = new Dictionary<string, VariableEntry>();
-            m_nextAddress = 0;
+            _nextAddress = stackBase;
 
             if (BuildTableForNode(programTree) == false)
             {
@@ -33,31 +38,31 @@ namespace Compiler
 
         bool BuildTableForNode(SyntaxNode node)
         {
-            if (node.m_type == ASTType.Decleration)
+            if (node.Type == ASTType.Decleration)
             {
-                if (m_variableTable.ContainsKey(node.m_data))
+                if (VariableTable.ContainsKey(node.Data))
                 {
-                    Console.WriteLine("Error, variable redeclaration: " + node.m_data);
+                    Console.WriteLine("Error, variable redeclaration: " + node.Data);
                     return false;
                 }
-                m_variableTable.Add(node.m_data, new VariableEntry());
-                m_variableTable[node.m_data].m_address = m_nextAddress;
-                m_nextAddress++;
-                m_variableTable[node.m_data].m_initialised = true;
+                VariableTable.Add(node.Data, new VariableEntry());
+                VariableTable[node.Data].Address = _nextAddress;
+                _nextAddress--;
+                VariableTable[node.Data].Initialised = true;
             }
-            else if (node.m_type == ASTType.UninitialisedDeclaration)
+            else if (node.Type == ASTType.UninitialisedDeclaration)
             {
-                if (m_variableTable.ContainsKey(node.m_data))
+                if (VariableTable.ContainsKey(node.Data))
                 {
-                    Console.WriteLine("Error, variable redeclaration: " + node.m_data);
+                    Console.WriteLine("Error, variable redeclaration: " + node.Data);
                     return false;
                 }
-                m_variableTable.Add(node.m_data, new VariableEntry());
-                m_variableTable[node.m_data].m_address = m_nextAddress;
-                m_nextAddress++;
-                m_variableTable[node.m_data].m_initialised = false;
+                VariableTable.Add(node.Data, new VariableEntry());
+                VariableTable[node.Data].Address = _nextAddress;
+                _nextAddress--;
+                VariableTable[node.Data].Initialised = false;
             }
-            foreach (SyntaxNode child in node.m_children)
+            foreach (SyntaxNode child in node.Children)
             {
                 if (BuildTableForNode(child) == false)
                 {
@@ -69,23 +74,31 @@ namespace Compiler
 
         bool AnalyseNode(SyntaxNode node)
         {
-            if (node.m_type == ASTType.VariableName)
+            if (node.Type == ASTType.VariableName)
             {
-                if (!m_variableTable.ContainsKey(node.m_data))
+                if (!VariableTable.ContainsKey(node.Data))
                 {
-                    Console.WriteLine("Error, undeclared variable: " + node.m_data);
+                    Console.WriteLine("Error, undeclared variable: " + node.Data);
                     return false;
                 }
             }
-            if (node.m_type == ASTType.Assignment)
+            if (node.Type == ASTType.Assignment)
             {
-                if (!m_variableTable.ContainsKey(node.m_data))
+                if (!VariableTable.ContainsKey(node.Data))
                 {
-                    Console.WriteLine("Error, undeclared variable: " + node.m_data);
+                    Console.WriteLine("Error, undeclared variable: " + node.Data);
                     return false;
                 }
             }
-            foreach (SyntaxNode child in node.m_children)
+            if (node.Type == ASTType.Tag)
+            {
+                if (!TagTable.ContainsKey(node.Data))
+                {
+                    TagTable.Add(node.Data, new Tag());
+                }
+            }
+
+            foreach (SyntaxNode child in node.Children)
             {
                 if (AnalyseNode(child) == false)
                 {

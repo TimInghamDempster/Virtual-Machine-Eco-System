@@ -73,7 +73,7 @@ namespace Virtual_Machine
 										(int)UnitCodes.Store        |   (int)StoreOperations.StoreToLiteralLocation     |   0 << 8  |   1,  (int)VirtualMachine.SSDSeekAddress,			// Set storage to block in register 0
 										(int)UnitCodes.Branch		|	(int)BranchOperations.JumpLessEqual				|	1 << 8	|	0,	(int)VirtualMachine.biosStartAddress + 36,		// Start next block
 
-										(int)UnitCodes.Branch		|	(int)BranchOperations.Jump						|	0 << 8	|	0,	(int)VirtualMachine.RAMStartAddress + 2,			// Jump to start of program just loaded
+										(int)UnitCodes.Branch		|	(int)BranchOperations.Jump						|	0 << 8	|	0,	(int)VirtualMachine.RAMStartAddress,			// Jump to start of program just loaded
 										
 			};
 		}

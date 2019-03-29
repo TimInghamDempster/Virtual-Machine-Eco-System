@@ -6,85 +6,109 @@ using System.Threading.Tasks;
 
 namespace Compiler
 {
-	class CodeGenerator
+class CodeGenerator
 	{
-		List<int> m_codeStream = new List<int>();
-        Dictionary<string, VariableEntry> m_variableTable;
+		private List<int> _codeStream;
+        private Dictionary<string, VariableEntry> _variableTable;
+        private Dictionary<string, Tag> _tagTable;
 
-		public List<int> GenerateCode(SyntaxNode abstractSyntaxTree, Dictionary<string, VariableEntry> variableTable)
+		public List<int> GenerateCode(SyntaxNode abstractSyntaxTree, Dictionary<string, VariableEntry> variableTable, Dictionary<string, Tag> tagTable)
 		{
-			m_codeStream = new List<int>();
-            m_variableTable = variableTable;
+			_codeStream = new List<int>();
+            _variableTable = variableTable;
+            _tagTable = tagTable;
 
             // Make sure r0 = 0
-            int initRegInstruction = (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.SetLiteral;
-            m_codeStream.Add(initRegInstruction);
-            m_codeStream.Add(0);
+            var initRegInstruction = (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.SetLiteral;
+            _codeStream.Add(initRegInstruction);
+            _codeStream.Add(0);
 
-            int storeInstruction = (int)Virtual_Machine.UnitCodes.Store | (int)Virtual_Machine.StoreOperations.StoreToLiteralLocation;
-            int pushInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.Push;
- 
-            foreach (VariableEntry variable in m_variableTable.Values)
+            var pushAndStoreInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.PushAndStore;
+            var pushInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.Push;
+
+            foreach (VariableEntry variable in _variableTable.Values)
             {
-                if (variable.m_initialised)
+                if (variable.Initialised)
                 {
-                    // Write a zero if variable is initialised
-                    m_codeStream.Add(storeInstruction);
-                    m_codeStream.Add(variable.m_address);
+                    // Initialise the variable to whatever is in reg0 (which we just set to 0)
+                    _codeStream.Add(pushAndStoreInstruction);
+                    _codeStream.Add(0);
                 }
-                // Reserve space for variable on stack
-                m_codeStream.Add(pushInstruction);
-                m_codeStream.Add(0);
+                else
+                {
+                    // Reserve space for variable on stack without storing anything, much faster
+                    // but causes uninitalised variables
+                    _codeStream.Add(pushInstruction);
+                    _codeStream.Add(0);
+                }
             }
 
-            foreach (SyntaxNode node in abstractSyntaxTree.m_children)
+            foreach (SyntaxNode node in abstractSyntaxTree.Children)
             {
-                if (node.m_type == ASTType.Assignment)
+                if (node.Type == ASTType.Assignment)
                 {
                     GenerateAssignment(node);
                 }
-                else if(node.m_type == ASTType.ASM)
+                else if(node.Type == ASTType.ASM)
                 {
                     GenerateASM(node);
                 }
+                else if (node.Type == ASTType.Tag)
+                {
+                    SetTagLocation(node);
+                }
             }
 
+            WriteTagValuesIntoCodestream();
+
 			AddPostScript();
-            return m_codeStream;
+            return _codeStream;
 		}
+
+        private void SetTagLocation(SyntaxNode node)
+        {
+            _tagTable[node.Data].Value = _codeStream.Count;
+        }
 
         private void GenerateASM(SyntaxNode node)
         {
-            m_codeStream.AddRange(Assembler.Assembler.ParseString(node.m_data));
+            _codeStream.AddRange(Assembler.Assembler.ParseString(node.Data));
         }
 
         private void GenerateAssignment(SyntaxNode node)
         {
-            GenerateExpression(node.m_children[0]);
+            GenerateExpression(node.Children[0]);
 
-            int storeAddress = m_variableTable[node.m_data].m_address;
-            int storeInstruction = (int)Virtual_Machine.UnitCodes.Store | (int)Virtual_Machine.StoreOperations.StoreToLiteralLocation;
-            m_codeStream.Add(storeInstruction);
-            m_codeStream.Add(storeAddress);
+            var storeAddress = _variableTable[node.Data].Address;
+            var storeInstruction = (int)Virtual_Machine.UnitCodes.Store | (int)Virtual_Machine.StoreOperations.StoreToLiteralLocation;
+            _codeStream.Add(storeInstruction);
+            _codeStream.Add(storeAddress);
         }
 
 		void GenerateExpression(SyntaxNode  expressionNode)
 		{
-			GeneratePrimitive(expressionNode.m_children[0], 0, true);
+            if (expressionNode.Type == ASTType.Primitive || expressionNode.Type == ASTType.Tag)
+            {
+                GeneratePrimitive(expressionNode, 0, true);
+            }
+            else
+            {
+                GeneratePrimitive(expressionNode.Children[0], 0, true);
 
-			for(int i = 1; i < expressionNode.m_children.Count; i += 2)
-			{
-				GeneratePrimitive(expressionNode.m_children[i + 1], 1, false);
-				GenerateBinaryOperator(expressionNode.m_children[i], 0, 1);
-			}
-		}
+                for (int i = 1; i < expressionNode.Children.Count; i += 2)
+                {
+                    GeneratePrimitive(expressionNode.Children[i + 1], 1, false);
+                    GenerateBinaryOperator(expressionNode.Children[i], 0, 1);
+                }
+            }
+        }
 
 		void GenerateBinaryOperator(SyntaxNode operatorNode, int targetRegister, int sourceRegister)
 		{
 			int instruction = targetRegister << 8 | targetRegister;
 			int argument = sourceRegister;
 
-			switch(operatorNode.m_type)
+			switch(operatorNode.Type)
 			{
 			case ASTType.BinaryPlus:
 				instruction |= (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.Add;
@@ -100,53 +124,53 @@ namespace Compiler
 				break;
 			}
 
-			m_codeStream.Add(instruction);
-			m_codeStream.Add(argument);
+			_codeStream.Add(instruction);
+			_codeStream.Add(argument);
 		}
 
 		void GenerateUnaryOperator(SyntaxNode unaryNode, int targetRegister)
 		{
-			GeneratePrimitive(unaryNode.m_children[0], targetRegister, false);
+			GeneratePrimitive(unaryNode.Children[0], targetRegister, false);
 		}
 
 		void GeneratePrimitive(SyntaxNode primitiveNode, int targetRegister, bool firstPrimitiveInExpression)
 		{
 			
-			if(primitiveNode.m_type == ASTType.Primitive)
+			if(primitiveNode.Type == ASTType.Primitive)
 			{
 				int val;
-				int.TryParse(primitiveNode.m_data, out val);
+				int.TryParse(primitiveNode.Data, out val);
 
 				int instruction = (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.SetLiteral | targetRegister << 8;
 
-				m_codeStream.Add(instruction);
-				m_codeStream.Add(val);
+				_codeStream.Add(instruction);
+				_codeStream.Add(val);
 			}
-			else if(primitiveNode.m_type == ASTType.UnaryMinus)
+			else if(primitiveNode.Type == ASTType.UnaryMinus)
 			{
-				if (primitiveNode.m_children[0].m_type == ASTType.Primitive)
+				if (primitiveNode.Children[0].Type == ASTType.Primitive)
 				{
 					GenerateUnaryOperator(primitiveNode, targetRegister);
 
 					int negativeInstruction = (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.MultiplyLiteral | targetRegister << 8 | targetRegister;
-					m_codeStream.Add(negativeInstruction);
-					m_codeStream.Add(-1);
+					_codeStream.Add(negativeInstruction);
+					_codeStream.Add(-1);
 				}
             }
-            else if (primitiveNode.m_type == ASTType.VariableName)
+            else if (primitiveNode.Type == ASTType.VariableName)
             {
-                int address = m_variableTable[primitiveNode.m_data].m_address;
+                int address = _variableTable[primitiveNode.Data].Address;
                 int loadInstruction = (int)Virtual_Machine.UnitCodes.Load | (int)Virtual_Machine.LoadOperations.LoadFromLiteralLocation | targetRegister << 8;
-                m_codeStream.Add(loadInstruction);
-                m_codeStream.Add(address);
+                _codeStream.Add(loadInstruction);
+                _codeStream.Add(address);
             }
-            else
+            else if(primitiveNode.Type == ASTType.Expression)
             {
                 if (!firstPrimitiveInExpression)
                 {
-                    int pushInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.Push;
-                    m_codeStream.Add(pushInstruction);
-                    m_codeStream.Add(0);
+                    int pushInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.PushAndStore;
+                    _codeStream.Add(pushInstruction);
+                    _codeStream.Add(0);
                 }
 
                 GenerateExpression(primitiveNode);
@@ -154,15 +178,42 @@ namespace Compiler
                 if (!firstPrimitiveInExpression)
                 {
                     int copyInstruction = (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.Copy | 1 << 8 | 0;
-                    m_codeStream.Add(copyInstruction);
-                    m_codeStream.Add(0);
+                    _codeStream.Add(copyInstruction);
+                    _codeStream.Add(0);
 
-                    int popInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.Pop;
-                    m_codeStream.Add(popInstruction);
-                    m_codeStream.Add(0);
+                    int popInstruction = (int)Virtual_Machine.UnitCodes.Stack | (int)Virtual_Machine.StackOperations.PopAndLoad;
+                    _codeStream.Add(popInstruction);
+                    _codeStream.Add(0);
                 }
             }
+            else if(primitiveNode.Type == ASTType.Tag)
+            {
+                int instruction = (int)Virtual_Machine.UnitCodes.ALU | (int)Virtual_Machine.ALUOperations.SetLiteral | targetRegister << 8;
+
+                _codeStream.Add(instruction);
+                _codeStream.Add(0);
+                _tagTable[primitiveNode.Data].InstructionLocations.Add(_codeStream.Count - 1);
+            }
+            else
+            {
+                throw new NotImplementedException("Primitive type not recognised");
+            }
 		}
+
+        void WriteTagValuesIntoCodestream()
+        {
+            foreach (var tag in _tagTable.Values)
+            {
+                foreach (var tagInstructionLocation in tag.InstructionLocations)
+                {
+                    if (tag.Value == 0)
+                    {
+                        Console.WriteLine("Error: tag not found");
+                    }
+                    _codeStream[tagInstructionLocation] = tag.Value + (int)Virtual_Machine.VirtualMachine.RAMStartAddress;
+                }
+            }
+        }
 
 		void AddPostScript()
 		{
@@ -171,7 +222,7 @@ namespace Compiler
 				(int)Virtual_Machine.UnitCodes.Branch	|	(int)Virtual_Machine.BranchOperations.Break
 			};
 
-			m_codeStream = m_codeStream.Concat(postScript).ToList();
+			_codeStream = _codeStream.Concat(postScript).ToList();
 		}
 	}
 }

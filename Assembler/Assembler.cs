@@ -304,6 +304,126 @@ namespace Assembler
                         }
                     }
                     break;
+                case "JumpNotEqualRegister":
+                    {
+                        instruction0 |= (int)Virtual_Machine.BranchOperations.JumpNotEqualRegister;
+
+                        int reg1;
+                        var success = int.TryParse(parts[2], out reg1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= reg1;
+
+                        int reg2;
+                        success = int.TryParse(parts[3], out reg2);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= (reg2 << 8);
+
+                        success = int.TryParse(parts[4], out instruction1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                    }
+                    break;
+                case "JumpEqualRegister":
+                    {
+                        instruction0 |= (int)Virtual_Machine.BranchOperations.JumpEqualRegister;
+
+                        int reg1;
+                        var success = int.TryParse(parts[2], out reg1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= reg1;
+
+                        int reg2;
+                        success = int.TryParse(parts[3], out reg2);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= (reg2 << 8);
+
+                        success = int.TryParse(parts[4], out instruction1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                    }
+                    break;
+                case "JumpLessRegister":
+                    {
+                        instruction0 |= (int)Virtual_Machine.BranchOperations.JumpLessRegister;
+
+                        int reg1;
+                        var success = int.TryParse(parts[2], out reg1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= reg1;
+
+                        int reg2;
+                        success = int.TryParse(parts[3], out reg2);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= (reg2 << 8);
+
+                        success = int.TryParse(parts[4], out instruction1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                    }
+                    break;
+                case "JumpLessEqualRegister":
+                    {
+                        instruction0 |= (int)Virtual_Machine.BranchOperations.JumpLessEqualRegister;
+
+                        int reg1;
+                        var success = int.TryParse(parts[2], out reg1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= reg1;
+
+                        int reg2;
+                        success = int.TryParse(parts[3], out reg2);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                        instruction0 |= (reg2 << 8);
+
+                        success = int.TryParse(parts[4], out instruction1);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error, failed to convert argument to int on line: " + line.ToString());
+                            return;
+                        }
+                    }
+                    break;
                 case "Break":
                     {
                         instruction0 |= (int)Virtual_Machine.BranchOperations.Break;
@@ -542,20 +662,30 @@ namespace Assembler
             switch (parts[1])
             {
                 case "Push":
-                    {
-                        instruction0 |= (int)Virtual_Machine.StackOperations.Push;
-                    }
-                    break;
+                {
+                    instruction0 |= (int)Virtual_Machine.StackOperations.Push;
+                }
+                break;
                 case "Pop":
-                    {
-                        instruction0 |= (int)Virtual_Machine.StackOperations.Pop;
-                    }
-                    break;
+                {
+                    instruction0 |= (int)Virtual_Machine.StackOperations.Pop;
+                }
+                break;
+                case "PushAndStore":
+                {
+                    instruction0 |= (int)Virtual_Machine.StackOperations.PushAndStore;
+                }
+                break;
+                case "PopAndLoad":
+                {
+                    instruction0 |= (int)Virtual_Machine.StackOperations.PopAndLoad;
+                }
+                break;
                 default:
-                    {
-                        Console.WriteLine("Error, Stack instruction \"" + parts[1] + "\" on line " + line.ToString() + " not recognised");
-                        return;
-                    }
+                {
+                    Console.WriteLine("Error, Stack instruction \"" + parts[1] + "\" on line " + line.ToString() + " not recognised");
+                    return;
+                }
             }
 
             int reg;

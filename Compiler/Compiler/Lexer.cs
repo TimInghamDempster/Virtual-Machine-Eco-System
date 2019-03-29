@@ -21,44 +21,48 @@ namespace Compiler
         SemiColon,
         Eqls,
         OpenASM,
-        CloseASM
+        CloseASM,
+        Tag,
+        Comment,
+        NotImplemented
     }
 
-	class Token
-	{
-		public TokenType type;
-		public string data;
+    class Token
+    {
+        public TokenType Type { get; set; }
+
+        public string Data { get; set; }
 	}
 
 	class Lexer
 	{
-        string m_text;
-        int m_positionInCode;
+        string _text;
+        int _positionInCode;
 
-        HashSet<char> m_reservedCharacters;
-        private List<string> m_keywords;
+        HashSet<char> _reservedCharacters;
+        private List<string> _keywords;
 
         public Lexer()
         {
-            m_reservedCharacters = new HashSet<char> { ' ', '+', '-', '*', '/', '(', ')', ';', '\n', '\r', '=', '\'', '{', '}', '!', '>', '<', '|', '&'};
+            _reservedCharacters = new HashSet<char> { ' ', '+', '-', '*', '/', '(', ')', ';', '\n', '\r', '=', '\'', '{', '}', '!', '>', '<', '|', '&', '\t'};
         }
 
         static List<string> SetupKeywords()
         {
-            return new List<string>() { "+", "-", "*", "/", "(", ")", ";", "int", "=", "'", "bool", "==", "!=", ">", "<", ">=", "<=", "if", "{", "}", "&&", "||", "true", "false", "<asm>", "</asm>"};
+            return new List<string>() { "+", "-", "*", "/", "(", ")", ";", "int", "=", "'", "bool", "==", "!=", ">", "<", ">=", "<=", "if", "{", "}", "&&", "||", "true", "false", "<asm>", "</asm>", "Tag"};
         }
 
 		public List<Token> Lex(string inputFilename)
 		{
             System.IO.StreamReader file = new System.IO.StreamReader(inputFilename);
 
-            m_text = file.ReadToEnd();
-            m_positionInCode = 0;
+            _text = file.ReadToEnd();
+            _positionInCode = 0;
 			List<Token> tokens = new List<Token>();
 
-            m_keywords = SetupKeywords();
+            _keywords = SetupKeywords();
 
-            while (m_positionInCode < m_text.Length)
+            while (_positionInCode < _text.Length)
             {
                 Token next = GetNextToken();
                 if (next != null)
@@ -70,12 +74,33 @@ namespace Compiler
 			return tokens;
 		}
 
+        private Token ReadComment()
+        {
+            
+            int startPos = _positionInCode;
+            while (_text[_positionInCode] != '\n')
+            {
+                _positionInCode++;
+            }
+
+            return new Token()
+            {
+                Data = _text.Substring(startPos, _positionInCode - startPos),
+                Type = TokenType.Comment
+            };
+        }
+
         public Token GetNextToken()
         {
-            char firstChar = m_text[m_positionInCode];
+            char firstChar = _text[_positionInCode];
 
             int temp;
-            if (int.TryParse(firstChar.ToString(), out temp))
+
+            if (firstChar == '/' && _text[_positionInCode + 1] == '/')
+            {
+                return ReadComment();
+            }
+            else if (int.TryParse(firstChar.ToString(), out temp))
             {
                 return GetNumericToken();
             }
@@ -90,9 +115,9 @@ namespace Compiler
 
                 if (keyword)
                 {
-                    m_positionInCode += keywordLength;
+                    _positionInCode += keywordLength;
 
-                    if(token.type == TokenType.OpenASM)
+                    if(token.Type == TokenType.OpenASM)
                     {
                         const string closingTag = "</asm>";
 
@@ -102,30 +127,30 @@ namespace Compiler
                             for(int i = 0; i < 6; i++)
                             {
                                 foundClosingTag = true;
-                                if(m_text[m_positionInCode + i] != closingTag[i])
+                                if(_text[_positionInCode + i] != closingTag[i])
                                 {
                                     foundClosingTag = false;
                                     break;
                                 }
                             }
-                            token.data += m_text[m_positionInCode];
-                            m_positionInCode++;
+                            token.Data += _text[_positionInCode];
+                            _positionInCode++;
                         }
-                        m_positionInCode += 6;
+                        _positionInCode += 6;
                     }
                 }
                 else
                 {
-                    if (m_reservedCharacters.Contains(m_text[m_positionInCode]))
+                    if (_reservedCharacters.Contains(_text[_positionInCode]))
                     {
-                        m_positionInCode++;
+                        _positionInCode++;
                         return null;
                     }
                     else
                     {
-                        token.type = TokenType.Label;
-                        token.data = stringToken;
-                        m_positionInCode += stringToken.Length;
+                        token.Type = TokenType.Label;
+                        token.Data = stringToken;
+                        _positionInCode += stringToken.Length;
                     }
                 }
                 return token;
@@ -136,7 +161,7 @@ namespace Compiler
         {
             keywordLength = -1;
             bool foundAKeyword = false;
-            foreach (string keyword in m_keywords)
+            foreach (string keyword in _keywords)
             {
                 if (keyword.Length < minimumLength)
                 {
@@ -145,7 +170,7 @@ namespace Compiler
                 bool match = true;
                 for (int i = 0; i < keyword.Length; i++)
                 {
-                    if (keyword[i] != m_text[m_positionInCode + i])
+                    if (keyword[i] != _text[_positionInCode + i])
                     {
                         match = false;
                     }
@@ -166,37 +191,43 @@ namespace Compiler
             switch (keyword)
             {
                 case "+":
-                    token.type = TokenType.Plus;
+                    token.Type = TokenType.Plus;
                     break;
                 case "-":
-                    token.type = TokenType.Minus;
+                    token.Type = TokenType.Minus;
                     break;
                 case "*":
-                    token.type = TokenType.Multiply;
+                    token.Type = TokenType.Multiply;
                     break;
                 case "/":
-                    token.type = TokenType.Divide;
+                    token.Type = TokenType.Divide;
                     break;
                 case "(":
-                    token.type = TokenType.OpenPerenthesis;
+                    token.Type = TokenType.OpenPerenthesis;
                     break;
                 case ")":
-                    token.type = TokenType.ClosePerenthesis;
+                    token.Type = TokenType.ClosePerenthesis;
                     break;
                 case "int":
-                    token.type = TokenType.IntDeclaration;
+                    token.Type = TokenType.IntDeclaration;
                     break;
                 case "\'":
-                    token.type = TokenType.Prime;
+                    token.Type = TokenType.Prime;
                     break;
                 case ";":
-                    token.type = TokenType.SemiColon;
+                    token.Type = TokenType.SemiColon;
                     break;
                 case "=":
-                    token.type = TokenType.Eqls;
+                    token.Type = TokenType.Eqls;
                     break;
                 case "<asm>":
-                    token.type = TokenType.OpenASM;
+                    token.Type = TokenType.OpenASM;
+                    break;
+                case "Tag":
+                    token.Type = TokenType.Tag;
+                    break;
+                default:
+                    token.Type = TokenType.NotImplemented;
                     break;
             }
         }
@@ -205,12 +236,12 @@ namespace Compiler
         {
             int length = 0;
 
-            while (!m_reservedCharacters.Contains(m_text[m_positionInCode + length]))
+            while (!_reservedCharacters.Contains(_text[_positionInCode + length]))
             {
                 length++;
             }
 
-            string stringToken = m_text.Substring(m_positionInCode, length);
+            string stringToken = _text.Substring(_positionInCode, length);
             
             return stringToken;
         }
@@ -222,15 +253,15 @@ namespace Compiler
             int length = 0;
             int currentInt;
 
-            while(m_positionInCode + length < m_text.Length && int.TryParse(m_text[m_positionInCode + length].ToString(), out currentInt))
+            while(_positionInCode + length < _text.Length && int.TryParse(_text[_positionInCode + length].ToString(), out currentInt))
             {
                 length++;
             }
 
-            token.data = m_text.Substring(m_positionInCode, length);
-            token.type = TokenType.Integer;
+            token.Data = _text.Substring(_positionInCode, length);
+            token.Type = TokenType.Integer;
 
-            m_positionInCode += length;
+            _positionInCode += length;
 
             return token;
         }

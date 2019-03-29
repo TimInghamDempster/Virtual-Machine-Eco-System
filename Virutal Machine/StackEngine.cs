@@ -1,66 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Virtual_Machine
+﻿namespace Virtual_Machine
 {
-	public enum StackOperations
+    public enum StackOperations
 	{
-		Push	= 0 << 16,
-		Pop		= 1 << 16
-	}
+		PushAndStore	= 0 << 16,
+		PopAndLoad		= 1 << 16,
+        Pop             = 2 << 16,
+        Push            = 3 << 16
+    }
 
 	class StackEngine
 	{
-		private CPUCore m_CPUCore;
-		StoreUnit m_storeUnit;
-		LoadUnit m_loadUnit;
-		private int[] m_instruction;
-		bool m_hasInstruction;
+		private CPUCore _CPUCore;
+		StoreUnit _storeUnit;
+		LoadUnit _loadUnit;
+		private int[] _instruction;
+		bool _hasInstruction;
 
 		public StackEngine(CPUCore CPUCore, StoreUnit storeUnit, LoadUnit loadUnit, int[] registers)
 		{
-			m_CPUCore = CPUCore;
-			m_storeUnit = storeUnit;
-			m_loadUnit = loadUnit;
+			_CPUCore = CPUCore;
+			_storeUnit = storeUnit;
+			_loadUnit = loadUnit;
 		}
 
 		public void SetInstruction(int[] instruction)
 		{
-			m_instruction = instruction;
-			m_hasInstruction = true;
+			_instruction = instruction;
+			_hasInstruction = true;
 		}
 
 		public void Tick()
 		{
-			if (m_CPUCore.CurrentStage == PipelineStages.Execution && m_hasInstruction == true)
+			if (_CPUCore.CurrentStage == PipelineStages.Execution && _hasInstruction == true)
 			{
-				StackOperations operation = (StackOperations)(m_instruction[0] & 0x00ff0000);
+				StackOperations operation = (StackOperations)(_instruction[0] & 0x00ff0000);
 
 				switch(operation)
 				{
-					case StackOperations.Push:
-					{
+                    // Editing the stack pointer is much faster than storing and loading
+                    // so it makes sense to have separate operations that just do the fast
+                    // part as the slow part isn't always necessary
+                    case StackOperations.Pop:
+                        _CPUCore.StackPointer++;
+                        _hasInstruction = false;
+                        _CPUCore.NextStage = PipelineStages.BranchPredict;
+                        break;
+                    case StackOperations.Push:
+                        _CPUCore.StackPointer--;
+                        _hasInstruction = false;
+                        _CPUCore.NextStage = PipelineStages.BranchPredict;
+                        break;
+                    // Second int of instruction contains register to store from
+					case StackOperations.PushAndStore:
 						int[] storeInstruction = new int[2];
-						storeInstruction[0] = (int)UnitCodes.Store | (int)StoreOperations.StoreToLiteralLocation | 0 << 8 | m_instruction[1];
-						storeInstruction[1] = (int)(VirtualMachine.RAMStartAddress + m_CPUCore.StackPointer);
-						m_storeUnit.SetInstruction(storeInstruction);
-						m_CPUCore.StackPointer--;
-						m_hasInstruction = false;
-					}
-					break;
-					case StackOperations.Pop:
-					{
-						m_CPUCore.StackPointer++;
+						storeInstruction[0] = (int)UnitCodes.Store | (int)StoreOperations.StoreToLiteralLocation | 0 << 8 | _instruction[1];
+						storeInstruction[1] = (int)(VirtualMachine.RAMStartAddress + _CPUCore.StackPointer);
+						_storeUnit.SetInstruction(storeInstruction);
+						_CPUCore.StackPointer--;
+						_hasInstruction = false;
+					    break;
+                    // Second int of instruction contains register to load to
+                    case StackOperations.PopAndLoad:
+						_CPUCore.StackPointer++;
 						int[] loadInstruction = new int[2];
-						loadInstruction[0] = (int)UnitCodes.Load | (int)LoadOperations.LoadFromLiteralLocation | 0 << 8 | m_instruction[1];
-						loadInstruction[1] = (int)(VirtualMachine.RAMStartAddress + m_CPUCore.StackPointer);
-						m_loadUnit.SetInstruction(loadInstruction);
-						m_hasInstruction = false;
-					}
-					break;
+						loadInstruction[0] = (int)UnitCodes.Load | (int)LoadOperations.LoadFromLiteralLocation | 0 << 8 | _instruction[1];
+						loadInstruction[1] = (int)(VirtualMachine.RAMStartAddress + _CPUCore.StackPointer);
+						_loadUnit.SetInstruction(loadInstruction);
+						_hasInstruction = false;
+					    break;
 				}
 			}
 		}

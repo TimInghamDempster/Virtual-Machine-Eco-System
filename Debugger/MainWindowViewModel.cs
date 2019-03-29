@@ -111,7 +111,7 @@ namespace Debugger
         void SwitchRunning()
         {
             m_running = !m_running;
-            OnPropertyChanged(nameof(StartStop);
+            OnPropertyChanged(nameof(StartStop));
 
             if(m_running)
             {
