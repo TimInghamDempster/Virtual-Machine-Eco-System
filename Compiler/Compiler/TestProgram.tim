@@ -29,6 +29,7 @@ Interrupt InterruptReturn             0  0 0					// Return to execution
 </asm>
 
 Tag(WriteString);
+int' returnAddress;
 <asm>
 ALU       SetLiteral                  4  0 0					// Put loop pos into register 4
 </asm>
@@ -48,7 +49,10 @@ Branch    JumpLessRegister            6  4 0					// Loop if not written enough c
 ALU       SetLiteral                  0  0 0					// Set the screen refresh command into register 0
 Store     StoreToLiteralLocation      0  0 3584					// Write refresh command to display command buffer.
 // Jump back
-Branch    JumpRegister                0  3 0					// Jump to location passed in r3
+</asm>
+temp = returnAddress;
+<asm>
+Branch    JumpRegister                0  0 0					// Jump to location passed in r3
 </asm>
 
 Tag(ProgramStart);
@@ -61,10 +65,7 @@ temp = Tag(hello);
 <asm>
 ALU       Copy						  2  0 0					// Put desired string pos into register
 </asm>
-temp = Tag(HandleUserInput);
-<asm>
-ALU       Copy						  3  0 0					// Set return pointer
-</asm>
+returnAddress = Tag(HandleUserInput);
 temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
 <asm>
 Branch    JumpRegister                0  0 0  					// Jump to string writing function
@@ -105,10 +106,7 @@ temp = Tag(NiceToMeetYou);
 <asm>
 ALU       Copy						  2  0 0					// Put desired string pos into register
 </asm>
-temp = Tag(WriteName);
-<asm>
-ALU       Copy						  3  0 0					// Set return pointer
-</asm>
+returnAddress = Tag(WriteName);
 temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
 <asm>
 Branch    JumpRegister                0  0 0  					// Jump to string writing function
@@ -121,10 +119,7 @@ Load      LoadFromLiteralLocation     6  0 3589					// Put string length into re
 ALU       SetLiteral                  1  0 180					// Put desired cursor pos into register 1
 ALU       SetLiteral                  2  0 3590					// Put desired string pos into register
 </asm>
-temp = Tag(WriteSecondQuery);
-<asm>
-ALU       Copy						  3  0 0					// Set return pointer
-</asm>
+returnAddress = Tag(WriteSecondQuery);
 temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
 <asm>
 Branch    JumpRegister                0  0 0  					// Jump to string writing function
@@ -139,10 +134,7 @@ temp = Tag(Hows);
 <asm>
 ALU       Copy						  2  0 0					// Put desired string pos into register
 </asm>
-temp = Tag(LoadFromSSD);
-<asm>
-ALU       Copy						  3  0 0					// Set return pointer
-</asm>
+returnAddress = Tag(LoadFromSSD);
 temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
 <asm>
 Branch    JumpRegister                0  0 0  					// Jump to string writing function
@@ -176,10 +168,7 @@ Load      LoadFromLiteralLocation     2  0 3589					// Set string pos to end of 
 ALU       AddLiteral                  2  2 1					// Move string pos to start of second string in ram
 ALU       AddLiteral                  2  2 3589					// Add location of RAM to string start address
 </asm>
-temp = Tag(WriteQuestionMark);
-<asm>
-ALU       Copy						  3  0 0					// Set return pointer
-</asm>
+returnAddress = Tag(WriteQuestionMark);
 temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
 <asm>
 Branch    JumpRegister                0  0 0  					// Jump to string writing function

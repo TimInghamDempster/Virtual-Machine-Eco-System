@@ -87,7 +87,12 @@ class CodeGenerator
 
 		void GenerateExpression(SyntaxNode  expressionNode)
 		{
-            if (expressionNode.Type == ASTType.Primitive || expressionNode.Type == ASTType.Tag)
+            // Some ASTNodes can only ever have one child, and so get
+            // added directly to their parent's child collection to
+            // reduce redundnat layers and nodes in the AST
+            if (expressionNode.Type == ASTType.Primitive 
+                || expressionNode.Type == ASTType.Tag
+                || expressionNode.Type == ASTType.VariableName)
             {
                 GeneratePrimitive(expressionNode, 0, true);
             }
