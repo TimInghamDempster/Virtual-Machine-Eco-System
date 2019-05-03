@@ -14,6 +14,7 @@ namespace Compiler
 
     public class Tag
     {
+        public string Name { get; set; }
         public int Value { get; set; }
         public List<int> InstructionLocations { get; } = new List<int>();
     }
@@ -94,7 +95,7 @@ namespace Compiler
             {
                 if (!TagTable.ContainsKey(node.Data))
                 {
-                    TagTable.Add(node.Data, new Tag());
+                    TagTable.Add(node.Data, new Tag() {Name = node.Data});
                 }
             }
 

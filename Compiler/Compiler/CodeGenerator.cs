@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Compiler
 {
-class CodeGenerator
+    class CodeGenerator
 	{
 		private List<int> _codeStream;
         private Dictionary<string, VariableEntry> _variableTable;
@@ -213,7 +211,7 @@ class CodeGenerator
                 {
                     if (tag.Value == 0)
                     {
-                        Console.WriteLine("Error: tag not found");
+                        Console.WriteLine("Error: tag " + tag.Name + " not found");
                     }
                     _codeStream[tagInstructionLocation] = tag.Value + (int)Virtual_Machine.VirtualMachine.RAMStartAddress;
                 }

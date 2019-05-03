@@ -123,7 +123,7 @@ namespace Compiler
 
                 // A tag statement ends in a semicolon but a tag reference might not,
                 // for a reference the semicolon will be handled by the statement it
-                // apears in but for a tag statement we ARE the statement and need
+                // appears in but for a tag statement we ARE the statement and need
                 // to deal with it
                 if (isStatement)
                 {
