@@ -62,6 +62,7 @@
     <Compile Include="AssemblyWindow.xaml.cs">
       <DependentUpon>AssemblyWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DebugInfoViewModel.cs" />
     <Compile Include="RegisterVM.cs" />
     <Compile Include="ViewModelBase.cs" />
     <Page Include="AssemblyWindow.xaml">

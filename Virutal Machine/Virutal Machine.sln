@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Virutal Machine", "Virutal Machine.csproj", "{85568F1B-3D33-4875-8980-97EDC94DE147}"
 EndProject
@@ -16,6 +16,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VMUtils", "VMUtils\VMUtils.csproj", "{4955CBA3-B6C8-49C7-9B0E-15A0DE2F6AAC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Debugger", "..\Debugger\Debugger.csproj", "{64AAB844-0F23-4635-9BAF-D3F55D555C69}"
+	ProjectSection(ProjectDependencies) = postProject
+		{16E5FC80-E089-4464-9071-BEB672A6D1AA} = {16E5FC80-E089-4464-9071-BEB672A6D1AA}
+		{1AE67994-781B-4007-84EA-7EFC65A8D452} = {1AE67994-781B-4007-84EA-7EFC65A8D452}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,5 +58,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {33C722A3-4DF4-44BB-9D49-BEC1A3116423}
 	EndGlobalSection
 EndGlobal

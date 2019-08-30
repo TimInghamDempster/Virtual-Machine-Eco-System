@@ -1,3 +1,4 @@
+{
 int' temp;
 
 temp = Tag(KeyboardInterruptHandler);							// Set register 0 to address 6 (keyboard ISR address)
@@ -40,10 +41,6 @@ displayCommandBufferAddress = 3584;
 displayStartAddress = 1536;
 charsWritten = 0;
 
-temp = charsToWrite;
-<asm>
-ALU       Copy						  6  0  0					// Copy chars to write to reg 6
-</asm>
 Tag(WriteNextChar);
 temp = stringAddress + charsWritten;
 <asm>
@@ -53,16 +50,17 @@ temp = displayIndex + charsWritten + displayStartAddress;
 <asm>
 Store     StoreToRegisterLocation     0  5 0					// Store char from register 2 to (display + register 0)
 </asm>
+
 charsWritten = charsWritten + 1;
-<asm>
-ALU       Copy						  4  0  0					// Copy chars written to reg 4
-</asm>
+if(charsWritten < charsToWrite)
+{
 temp = Tag(WriteNextChar);
 <asm>
-Branch    JumpLessRegister            6  4 0					// Loop if not written enough characters
+Branch    JumpRegister				  0  0 0					// Loop if not written enough characters
+</asm>
+}
 
 // Flush Screen
-</asm>
 temp = displayCommandBufferAddress;
 <asm>
 ALU       SetLiteral                  1  0 0					// Set the screen refresh command into register 0
@@ -211,11 +209,7 @@ Store     StoreToRegisterLocation     0  1 0					// Write refresh command to dis
 
 </asm>
 int charsWrittenToSSD;
-temp = inputNameLength;
-<asm>
 // Write current name to ssd
-ALU       Copy						  2  0 0					// set total char count into register 2
-</asm>
 temp = ssdBlockAddress;
 <asm>
 // Load name from ssd
@@ -231,18 +225,19 @@ temp = ssdDataAddress;
 <asm>
 Store     StoreToRegisterLocation     0  3 0					// Store char to fifo
 </asm>
-temp = charsWrittenToSSD;
-<asm>
-ALU       Copy						  4 0 0
-</asm>
+
 charsWrittenToSSD = charsWrittenToSSD + 1;
+if(charsWrittenToSSD <= inputNameLength)
+{
 temp = Tag(WriteCharToSSD);
 <asm>
-Branch    JumpLessRegister			  2  4 0					// Loop back for next char
-ALU       SetLiteral				  1  0 0					// Set r1 to null
+Branch    JumpRegister				  0  0 0					// Loop back for next char
 </asm>
+}
+
 temp = ssdDataAddress;
 <asm>
+ALU       SetLiteral				  1  0 0					// Set r1 to null
 Store     StoreToRegisterLocation     0  1 0					// Send a terminating null
 </asm>
 temp = ssdBlockAddress;
@@ -322,3 +317,4 @@ Data 0x00000077
 Data 0x00000027
 Data 0x00000073
 </asm>
+}

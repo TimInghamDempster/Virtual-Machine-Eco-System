@@ -10,6 +10,7 @@ namespace Compiler
     {
         public int Address { get; set; }
         public bool Initialised { get; set; }
+        public string Name { get; set; }
     }
 
     public class Tag
@@ -39,29 +40,37 @@ namespace Compiler
 
         bool BuildTableForNode(SyntaxNode node)
         {
-            if (node.Type == ASTType.Decleration)
+            if (node.Type == ASTType.IntDecleration || node.Type == ASTType.BoolDecleration)
             {
                 if (VariableTable.ContainsKey(node.Data))
                 {
                     Console.WriteLine("Error, variable redeclaration: " + node.Data);
                     return false;
                 }
-                VariableTable.Add(node.Data, new VariableEntry());
-                VariableTable[node.Data].Address = _nextAddress;
+
+                VariableTable.Add(node.Data, new VariableEntry()
+                {
+                    Address = _nextAddress,
+                    Initialised = true,
+                    Name = node.Data
+                });
                 _nextAddress--;
-                VariableTable[node.Data].Initialised = true;
             }
-            else if (node.Type == ASTType.UninitialisedDeclaration)
+            else if (node.Type == ASTType.UninitialisedIntDeclaration || node.Type == ASTType.UninitialisedBoolDeclaration)
             {
                 if (VariableTable.ContainsKey(node.Data))
                 {
                     Console.WriteLine("Error, variable redeclaration: " + node.Data);
                     return false;
                 }
-                VariableTable.Add(node.Data, new VariableEntry());
-                VariableTable[node.Data].Address = _nextAddress;
+
+                VariableTable.Add(node.Data, new VariableEntry()
+                {
+                    Address = _nextAddress,
+                    Initialised = false,
+                    Name = node.Data
+                });
                 _nextAddress--;
-                VariableTable[node.Data].Initialised = false;
             }
             foreach (SyntaxNode child in node.Children)
             {

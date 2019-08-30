@@ -24,7 +24,14 @@ namespace Compiler
         CloseASM,
         Tag,
         Comment,
-        NotImplemented
+        BooleanValue,
+        NotImplemented,
+        BoolDeclaration,
+        BooleanComparison,
+        BooleanConjunction,
+        If,
+        OpenBrace,
+        CloseBrace
     }
 
     class Token
@@ -32,12 +39,21 @@ namespace Compiler
         public TokenType Type { get; set; }
 
         public string Data { get; set; }
+
+        public int SourceLocation { get; private set; }
+
+        public string Source { get; set; }
+
+        public Token()
+        {
+            SourceLocation = Lexer.PositionInCode;
+        }
 	}
 
 	class Lexer
 	{
         string _text;
-        int _positionInCode;
+        public static int PositionInCode { get; private set; }
 
         HashSet<char> _reservedCharacters;
         private List<string> _keywords;
@@ -57,12 +73,12 @@ namespace Compiler
             System.IO.StreamReader file = new System.IO.StreamReader(inputFilename);
 
             _text = file.ReadToEnd();
-            _positionInCode = 0;
+            PositionInCode = 0;
 			List<Token> tokens = new List<Token>();
 
             _keywords = SetupKeywords();
 
-            while (_positionInCode < _text.Length)
+            while (PositionInCode < _text.Length)
             {
                 Token next = GetNextToken();
                 if (next != null)
@@ -71,32 +87,45 @@ namespace Compiler
                 }
             }
 
+            InsertCodeIntoTokens(tokens);
+
 			return tokens;
 		}
+
+        private void InsertCodeIntoTokens(List<Token> tokens)
+        {
+            for(int tokenId = 0; tokenId < tokens.Count - 1; tokenId++)
+            {
+                int startPos = tokens[tokenId].SourceLocation;
+                int endPos = tokens[tokenId + 1].SourceLocation;
+
+                tokens[tokenId].Source = _text.Substring(startPos, endPos - startPos);
+            }
+        }
 
         private Token ReadComment()
         {
             
-            int startPos = _positionInCode;
-            while (_text[_positionInCode] != '\n')
+            int startPos = PositionInCode;
+            while (_text[PositionInCode] != '\n')
             {
-                _positionInCode++;
+                PositionInCode++;
             }
 
             return new Token()
             {
-                Data = _text.Substring(startPos, _positionInCode - startPos),
+                Data = _text.Substring(startPos, PositionInCode - startPos),
                 Type = TokenType.Comment
             };
         }
 
         public Token GetNextToken()
         {
-            char firstChar = _text[_positionInCode];
+            char firstChar = _text[PositionInCode];
 
             int temp;
 
-            if (firstChar == '/' && _text[_positionInCode + 1] == '/')
+            if (firstChar == '/' && _text[PositionInCode + 1] == '/')
             {
                 return ReadComment();
             }
@@ -115,7 +144,7 @@ namespace Compiler
 
                 if (keyword)
                 {
-                    _positionInCode += keywordLength;
+                    PositionInCode += keywordLength;
 
                     if(token.Type == TokenType.OpenASM)
                     {
@@ -127,30 +156,30 @@ namespace Compiler
                             for(int i = 0; i < 6; i++)
                             {
                                 foundClosingTag = true;
-                                if(_text[_positionInCode + i] != closingTag[i])
+                                if(_text[PositionInCode + i] != closingTag[i])
                                 {
                                     foundClosingTag = false;
                                     break;
                                 }
                             }
-                            token.Data += _text[_positionInCode];
-                            _positionInCode++;
+                            token.Data += _text[PositionInCode];
+                            PositionInCode++;
                         }
-                        _positionInCode += 6;
+                        PositionInCode += 6;
                     }
                 }
                 else
                 {
-                    if (_reservedCharacters.Contains(_text[_positionInCode]))
+                    if (_reservedCharacters.Contains(_text[PositionInCode]))
                     {
-                        _positionInCode++;
+                        PositionInCode++;
                         return null;
                     }
                     else
                     {
                         token.Type = TokenType.Label;
                         token.Data = stringToken;
-                        _positionInCode += stringToken.Length;
+                        PositionInCode += stringToken.Length;
                     }
                 }
                 return token;
@@ -167,10 +196,15 @@ namespace Compiler
                 {
                     continue;
                 }
+
+                // Not enough chars left for it to be this word
+                if (_text.Length < PositionInCode + keyword.Length)
+                    continue;
+
                 bool match = true;
                 for (int i = 0; i < keyword.Length; i++)
                 {
-                    if (keyword[i] != _text[_positionInCode + i])
+                    if (keyword[i] != _text[PositionInCode + i])
                     {
                         match = false;
                     }
@@ -226,6 +260,37 @@ namespace Compiler
                 case "Tag":
                     token.Type = TokenType.Tag;
                     break;
+                case "bool":
+                    token.Type = TokenType.BoolDeclaration;
+                    break;
+                case "true":
+                case "false":
+                    token.Type = TokenType.BooleanValue;
+                    token.Data = keyword;
+                    break;
+                case "==":
+                case "!=":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    token.Type = TokenType.BooleanComparison;
+                    token.Data = keyword;
+                    break;
+                case "&&":
+                case "||":
+                    token.Type = TokenType.BooleanConjunction;
+                    token.Data = keyword;
+                    break;
+                case "if":
+                    token.Type = TokenType.If;
+                    break;
+                case "{":
+                    token.Type = TokenType.OpenBrace;
+                    break;
+                case "}":
+                    token.Type = TokenType.CloseBrace;
+                    break;
                 default:
                     token.Type = TokenType.NotImplemented;
                     break;
@@ -236,12 +301,12 @@ namespace Compiler
         {
             int length = 0;
 
-            while (!_reservedCharacters.Contains(_text[_positionInCode + length]))
+            while (!_reservedCharacters.Contains(_text[PositionInCode + length]))
             {
                 length++;
             }
 
-            string stringToken = _text.Substring(_positionInCode, length);
+            string stringToken = _text.Substring(PositionInCode, length);
             
             return stringToken;
         }
@@ -253,15 +318,15 @@ namespace Compiler
             int length = 0;
             int currentInt;
 
-            while(_positionInCode + length < _text.Length && int.TryParse(_text[_positionInCode + length].ToString(), out currentInt))
+            while(PositionInCode + length < _text.Length && int.TryParse(_text[PositionInCode + length].ToString(), out currentInt))
             {
                 length++;
             }
 
-            token.Data = _text.Substring(_positionInCode, length);
+            token.Data = _text.Substring(PositionInCode, length);
             token.Type = TokenType.Integer;
 
-            _positionInCode += length;
+            PositionInCode += length;
 
             return token;
         }

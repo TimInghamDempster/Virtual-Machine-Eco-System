@@ -10,15 +10,22 @@ namespace Compiler
         BinaryMul,
         BinaryDiv,
         UnaryMinus,
-        Expression,
+        IntExpression,
         Primitive,
-        Decleration,
-        UninitialisedDeclaration,
+        IntDecleration,
+        UninitialisedIntDeclaration,
         Assignment,
         VariableName,
         ASM,
         Tag,
         Comment,
+        BoolDecleration,
+        UninitialisedBoolDeclaration,
+        Conditional,
+        BoolExpression,
+        BoolSubExpression,
+        CodeBlock,
+        BoolValue,
     }
 
 	class SyntaxNode
@@ -26,31 +33,55 @@ namespace Compiler
 		public List<SyntaxNode> Children { get; } = new List<SyntaxNode>();
 		public ASTType Type { get; set; }
 		public string Data { get; set; }
+
+        public int StartTokenId { get; private set; }
+
+        public SyntaxNode()
+        {
+            StartTokenId = Parser.TokenIndex;
+        }
 	}
 
 	class Parser
 	{
 		List<Token> _tokenStream;
-		int _tokenIndex;
+		public static int TokenIndex;
+
+        private readonly ILogger _logger;
+
+        public Parser(ILogger logger)
+        {
+            _logger = logger;
+        }
 
 		public bool Parse(List<Token> tokenStream, SyntaxNode programNode)
 		{
 			_tokenStream = tokenStream;
 
-            while (ParseStatement(programNode) || ParseComment(programNode))
+            return ParseCodeBlock(programNode);
+		}
+
+        private bool ParseCodeBlock(SyntaxNode programNode)
+        {
+            if (_tokenStream[TokenIndex].Type == TokenType.OpenBrace)
             {
-                if (_tokenIndex == tokenStream.Count)
+                TokenIndex++;
+                do
                 {
-                    return true;
-                }
+                    if (_tokenStream[TokenIndex].Type == TokenType.CloseBrace)
+                    {
+                        TokenIndex++;
+                        return true;
+                    }
+                } while (ParseStatement(programNode) || ParseComment(programNode));
             }
 
             return false;
-		}
+        }
 
         private bool ParseComment(SyntaxNode programNode)
         {
-            var token = _tokenStream[_tokenIndex];
+            var token = _tokenStream[TokenIndex];
             if (token.Type == TokenType.Comment)
             {
                 var commentNode = new SyntaxNode()
@@ -60,7 +91,7 @@ namespace Compiler
                 };
 
                 programNode.Children.Add(commentNode);
-                _tokenIndex++;
+                TokenIndex++;
                 return true;
             }
             else
@@ -71,7 +102,7 @@ namespace Compiler
 
         bool ParseStatement(SyntaxNode parent)
         {
-            int startIndex = _tokenIndex;
+            int startIndex = TokenIndex;
 
             if(ParseDeclaration(parent) == true)
             {
@@ -79,24 +110,32 @@ namespace Compiler
             }
             else
             {
-                _tokenIndex = startIndex;
+                TokenIndex = startIndex;
                 if(ParseAssignment(parent) == true)
                 {
                     return true;
                 }
                 else
                 {
-                    _tokenIndex = startIndex;
+                    TokenIndex = startIndex;
                     if (ParseASM(parent))
                     {
                         return true;
                     }
                     else
                     {
-                        _tokenIndex = startIndex;
+                        TokenIndex = startIndex;
                         if (ParseTag(parent, true))
                         {
                             return true;
+                        }
+                        else
+                        {
+                            TokenIndex = startIndex;
+                            if (ParseConditional(parent))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -105,21 +144,124 @@ namespace Compiler
             return false;
         }
 
+        private bool ParseConditional(SyntaxNode parent)
+        {
+            if (_tokenStream[TokenIndex].Type != TokenType.If)
+                return false;
+
+            SyntaxNode conditionalNode = new SyntaxNode();
+            TokenIndex++;
+            if (_tokenStream[TokenIndex].Type != TokenType.OpenPerenthesis)
+            {
+                _logger.Log("Error: \"(\" expected");
+                return false;
+            }
+
+            conditionalNode.Type = ASTType.Conditional;
+
+            TokenIndex++;
+            if (!ParseBoolExpression(conditionalNode))
+            {
+                _logger.Log("Error: if statement condition must evaluate to boolean value");
+                return false;
+            }
+
+            if (_tokenStream[TokenIndex].Type != TokenType.ClosePerenthesis)
+            {
+                _logger.Log("Error: \")\" expected");
+                return false;
+            }
+
+            TokenIndex++;
+            var codeBlockNode = new SyntaxNode();
+            if (!ParseCodeBlock(codeBlockNode))
+            {
+                _logger.Log("Error: if statement must be followed by a code block");
+            }
+            codeBlockNode.Type = ASTType.CodeBlock;
+            conditionalNode.Children.Add(codeBlockNode);
+
+            parent.Children.Add(conditionalNode);
+            return true;
+        }
+
+        private bool ParseDeclaration(SyntaxNode parent)
+        {
+            if (ParseIntegerDeclaration(parent) == true)
+            {
+                return true;
+            }
+            else if (ParseBooleanDeclaration(parent) == true)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool ParseBooleanDeclaration(SyntaxNode parent)
+        {
+            bool initialise = true;
+            string name = "";
+            SyntaxNode declerationNode = new SyntaxNode();
+
+            if (_tokenStream[TokenIndex].Type != TokenType.BoolDeclaration)
+            {
+                return false;
+            }
+            TokenIndex++;
+
+            if (_tokenStream[TokenIndex].Type == TokenType.Prime)
+            {
+                initialise = false;
+                TokenIndex++;
+            }
+
+            if (_tokenStream[TokenIndex].Type != TokenType.Label)
+            {
+                return false;
+            }
+            else
+            {
+                name = _tokenStream[TokenIndex].Data;
+            }
+            TokenIndex++;
+
+            if (_tokenStream[TokenIndex].Type != TokenType.SemiColon)
+            {
+                Console.WriteLine("Error, semicolon expected");
+                return false;
+            }
+            TokenIndex++;
+
+            if (initialise == true)
+            {
+                declerationNode.Type = ASTType.BoolDecleration;
+            }
+            else
+            {
+                declerationNode.Type = ASTType.UninitialisedBoolDeclaration;
+            }
+            declerationNode.Data = name;
+            parent.Children.Add(declerationNode);
+
+            return true;
+        }
+
         private bool ParseTag(SyntaxNode parent, bool isStatement)
         {
-            if (_tokenStream[_tokenIndex].Type == TokenType.Tag &&
-                _tokenStream[_tokenIndex + 1].Type == TokenType.OpenPerenthesis &&
-                _tokenStream[_tokenIndex + 2].Type == TokenType.Label &&
-                _tokenStream[_tokenIndex + 3].Type == TokenType.ClosePerenthesis)
+            if (_tokenStream[TokenIndex].Type == TokenType.Tag &&
+                _tokenStream[TokenIndex + 1].Type == TokenType.OpenPerenthesis &&
+                _tokenStream[TokenIndex + 2].Type == TokenType.Label &&
+                _tokenStream[TokenIndex + 3].Type == TokenType.ClosePerenthesis)
             {
                 var tagNode = new SyntaxNode()
                 {
                     Type = ASTType.Tag,
-                    Data = _tokenStream[_tokenIndex + 2].Data
+                    Data = _tokenStream[TokenIndex + 2].Data
                 };
 
                 parent.Children.Add(tagNode);
-                _tokenIndex += 4;
+                TokenIndex += 4;
 
                 // A tag statement ends in a semicolon but a tag reference might not,
                 // for a reference the semicolon will be handled by the statement it
@@ -127,9 +269,9 @@ namespace Compiler
                 // to deal with it
                 if (isStatement)
                 {
-                    if (_tokenStream[_tokenIndex].Type == TokenType.SemiColon)
+                    if (_tokenStream[TokenIndex].Type == TokenType.SemiColon)
                     {
-                        _tokenIndex++;
+                        TokenIndex++;
                         return true;
                     }
                     else
@@ -146,48 +288,48 @@ namespace Compiler
             return false;
         }
 
-        private bool ParseDeclaration(SyntaxNode parent)
+        private bool ParseIntegerDeclaration(SyntaxNode parent)
         {
+            SyntaxNode declerationNode = new SyntaxNode();
             bool initialise = true;
             string name = "";
 
-            if (_tokenStream[_tokenIndex].Type != TokenType.IntDeclaration)
+            if (_tokenStream[TokenIndex].Type != TokenType.IntDeclaration)
             {
                 return false;
             }
-            _tokenIndex++;
+            TokenIndex++;
             
-            if (_tokenStream[_tokenIndex].Type == TokenType.Prime)
+            if (_tokenStream[TokenIndex].Type == TokenType.Prime)
             {
                 initialise = false;
-                _tokenIndex++;
+                TokenIndex++;
             }
 
-            if (_tokenStream[_tokenIndex].Type != TokenType.Label)
+            if (_tokenStream[TokenIndex].Type != TokenType.Label)
             {
                 return false;
             }
             else
             {
-                name = _tokenStream[_tokenIndex].Data;
+                name = _tokenStream[TokenIndex].Data;
             }
-            _tokenIndex++;
+            TokenIndex++;
 
-            if (_tokenStream[_tokenIndex].Type != TokenType.SemiColon)
+            if (_tokenStream[TokenIndex].Type != TokenType.SemiColon)
             {
                 Console.WriteLine("Error, semicolon expected");
                 return false;
             }
-            _tokenIndex++;
+            TokenIndex++;
 
-            SyntaxNode declerationNode = new SyntaxNode();
             if (initialise == true)
             {
-                declerationNode.Type = ASTType.Decleration;
+                declerationNode.Type = ASTType.IntDecleration;
             }
             else
             {
-                declerationNode.Type = ASTType.UninitialisedDeclaration;
+                declerationNode.Type = ASTType.UninitialisedIntDeclaration;
             }
             declerationNode.Data = name;
             parent.Children.Add(declerationNode);
@@ -197,35 +339,35 @@ namespace Compiler
 
         private bool ParseAssignment(SyntaxNode parent)
         {
+            SyntaxNode assignmentNode = new SyntaxNode();
             string name = "";
 
-            if (_tokenStream[_tokenIndex].Type != TokenType.Label)
+            if (_tokenStream[TokenIndex].Type != TokenType.Label)
             {
                 return false;
             }
-            name = _tokenStream[_tokenIndex].Data;
-            _tokenIndex++;
+            name = _tokenStream[TokenIndex].Data;
+            TokenIndex++;
 
-            if (_tokenStream[_tokenIndex].Type != TokenType.Eqls)
+            if (_tokenStream[TokenIndex].Type != TokenType.Eqls)
             {
                 return false;
             }
-            _tokenIndex++;
+            TokenIndex++;
 
-            SyntaxNode assignmentNode = new SyntaxNode();
             assignmentNode.Type = ASTType.Assignment;
             assignmentNode.Data = name;
 
-            if (!ParseExpression(assignmentNode, 0))
+            if (!ParseIntExpression(assignmentNode, 0) && !ParseBoolExpression(assignmentNode))
             {
                 return false;
             }
 
-            if (_tokenStream[_tokenIndex].Type != TokenType.SemiColon)
+            if (_tokenStream[TokenIndex].Type != TokenType.SemiColon)
             {
                 return false;
             }
-            _tokenIndex++;
+            TokenIndex++;
 
             parent.Children.Add(assignmentNode);
             return true;
@@ -233,24 +375,99 @@ namespace Compiler
 
         private bool ParseASM(SyntaxNode parent)
         {
-            if(_tokenStream[_tokenIndex].Type == TokenType.OpenASM)
+            if(_tokenStream[TokenIndex].Type == TokenType.OpenASM)
             {
                 SyntaxNode asmNode = new SyntaxNode();
                 asmNode.Type = ASTType.ASM;
-                asmNode.Data = _tokenStream[_tokenIndex].Data;
+                asmNode.Data = _tokenStream[TokenIndex].Data;
 
                 parent.Children.Add(asmNode);
-                _tokenIndex++;
+                TokenIndex++;
                 return true;
             }
 
             return false;
         }
 
-		bool ParseExpression(SyntaxNode parent, int minimumPrecedence)
+        // BoolExpression => BooleanValue | Label
+        private bool ParseBoolExpression(SyntaxNode parent)
+        {
+            SyntaxNode expressionNode = new SyntaxNode();
+            expressionNode.Type = ASTType.BoolExpression;
+
+            if (!ParseBoolSubExpression(expressionNode))
+                return false;
+
+            bool moreExpressions = _tokenStream[TokenIndex].Type == TokenType.BooleanConjunction;
+
+            while (moreExpressions)
+            {
+                TokenIndex++;
+
+                if (!ParseBoolSubExpression(expressionNode))
+                {
+                    _logger.Log("Error: boolean sub expression expected");
+                    return false;
+                }
+                moreExpressions = _tokenStream[TokenIndex].Type == TokenType.BooleanConjunction;
+            }
+
+            parent.Children.Add(expressionNode); ;
+            return true;
+        }
+
+        private bool ParseBoolSubExpression(SyntaxNode parent)
+        {
+            SyntaxNode expressionNode = new SyntaxNode();
+
+            if (_tokenStream[TokenIndex].Type == TokenType.BooleanValue)
+            {
+                expressionNode.Data = _tokenStream[TokenIndex].Data;
+                expressionNode.Type = ASTType.BoolValue;
+                parent.Children.Add(expressionNode);
+                TokenIndex++;
+                return true;
+            }
+            else if (ParsePrimitive(expressionNode))
+            {
+                if (_tokenStream[TokenIndex].Type != TokenType.BooleanComparison)
+                    return false;
+
+                expressionNode.Data = _tokenStream[TokenIndex].Data;
+                expressionNode.Type = ASTType.BoolSubExpression;
+
+                TokenIndex++;
+
+                if (!ParsePrimitive(expressionNode))
+                {
+                    _logger.Log("Error, value to compare to expected");
+                }
+
+                parent.Children.Add(expressionNode);
+                return true;
+            }
+            else if (_tokenStream[TokenIndex].Type == TokenType.Label)
+            {
+                expressionNode.Type = ASTType.VariableName;
+                expressionNode.Data = _tokenStream[TokenIndex].Data;
+                parent.Children.Add(expressionNode);
+                return true;
+            }
+            else if (_tokenStream[TokenIndex].Type == TokenType.OpenPerenthesis)
+            {
+                if (ParseBoolExpression(expressionNode))
+                {
+                    parent.Children.Add(expressionNode);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool ParseIntExpression(SyntaxNode parent, int minimumPrecedence)
 		{
 			SyntaxNode expressionNode = new SyntaxNode();
-			expressionNode.Type = ASTType.Expression;
+			expressionNode.Type = ASTType.IntExpression;
 			
 			if(ParsePrimitive(expressionNode))
 			{
@@ -259,7 +476,7 @@ namespace Compiler
                     int nextPrecedence = GetPrecedence() + 1;
                     ParseBinaryOperator(expressionNode);
 
-                    ParseExpression(expressionNode, nextPrecedence);
+                    ParseIntExpression(expressionNode, nextPrecedence);
                 }
 			}
             if (expressionNode.Children.Count > 1)
@@ -275,7 +492,7 @@ namespace Compiler
 
         int GetPrecedence()
         {
-            switch (_tokenStream[_tokenIndex].Type)
+            switch (_tokenStream[TokenIndex].Type)
             {
                 case TokenType.Plus:
                 {
@@ -302,9 +519,9 @@ namespace Compiler
 
 		void AdvanceToken()
 		{
-            if (_tokenIndex + 1 < _tokenStream.Count)
+            if (TokenIndex + 1 < _tokenStream.Count)
             {
-                _tokenIndex++;
+                TokenIndex++;
             }
 		}
 
@@ -313,19 +530,19 @@ namespace Compiler
 			SyntaxNode primitiveNode = new SyntaxNode();
 			primitiveNode.Type = ASTType.Primitive;
 
-            if (_tokenStream[_tokenIndex].Type == TokenType.Integer)
+            if (_tokenStream[TokenIndex].Type == TokenType.Integer)
 			{
 				parent.Children.Add(primitiveNode);
-                primitiveNode.Data = _tokenStream[_tokenIndex].Data;
+                primitiveNode.Data = _tokenStream[TokenIndex].Data;
 				AdvanceToken();
 				return true;
 			}
-            else if (_tokenStream[_tokenIndex].Type == TokenType.OpenPerenthesis)
+            else if (_tokenStream[TokenIndex].Type == TokenType.OpenPerenthesis)
 			{
 				AdvanceToken();
-				if(ParseExpression(parent, 0))
+				if(ParseIntExpression(parent, 0))
 				{
-                    if (_tokenStream[_tokenIndex].Type == TokenType.ClosePerenthesis)
+                    if (_tokenStream[TokenIndex].Type == TokenType.ClosePerenthesis)
 					{
 						AdvanceToken();
 						return true;
@@ -346,10 +563,10 @@ namespace Compiler
 				parent.Children.Add(primitiveNode.Children[0]);
 				return true;
 			}
-            else if (_tokenStream[_tokenIndex].Type == TokenType.Label)
+            else if (_tokenStream[TokenIndex].Type == TokenType.Label)
             {
                 primitiveNode.Type = ASTType.VariableName;
-                primitiveNode.Data = _tokenStream[_tokenIndex].Data;
+                primitiveNode.Data = _tokenStream[TokenIndex].Data;
                 parent.Children.Add(primitiveNode);
                 AdvanceToken();
                 return true;
@@ -367,7 +584,7 @@ namespace Compiler
 
 		bool ParseUnaryOperator(SyntaxNode parent)
 		{
-            if (_tokenStream[_tokenIndex].Type == TokenType.Minus)
+            if (_tokenStream[TokenIndex].Type == TokenType.Minus)
 			{
 				SyntaxNode minusNode = new SyntaxNode();
 				minusNode.Type = ASTType.UnaryMinus;
@@ -389,7 +606,7 @@ namespace Compiler
 		{
 			SyntaxNode binaryNode = new SyntaxNode();
 
-            switch (_tokenStream[_tokenIndex].Type)
+            switch (_tokenStream[TokenIndex].Type)
 			{
 				case TokenType.Plus:
 				{

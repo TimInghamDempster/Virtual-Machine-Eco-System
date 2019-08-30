@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Virtual_Machine;
 
 namespace Debugger
@@ -8,23 +10,78 @@ namespace Debugger
     {
         private readonly VirtualMachine _virtualMachine;
 
-        private UInt32 _instructionPointer;
+        private uint _instructionPointer;
 
-        private HashSet<UInt32> _breakpoints;
+        private HashSet<uint> _breakpoints;
+
+        private List<DebugInfoViewModel> _debugInfo = new List<DebugInfoViewModel>();
 
         // Will bind to the currently broken on instruction
         InstructionViewModel m_currentInstruction;
 
         // The instruction window we are displaying can be from any location in memory
         // so we need to store it as a dictionary rather than a list
-        public Dictionary<UInt32, InstructionViewModel> InstructionStream { get; private set; }
+        private Dictionary<uint, InstructionViewModel> _instructionDictionary;
 
         public event Action<InstructionViewModel> BreakpointChanged;
 
-        public AssemblyViewModel(VirtualMachine virtualMachine, UInt32 instructionPointer, HashSet<UInt32> breakpoints)
+        public IEnumerable<object> InstructionStream
+        {
+            get
+            {
+                var instructionList = new List<object>();
+                InstructionViewModel previousInstruction = null;
+
+                foreach(var instruction in _instructionDictionary.Values)
+                {
+                    foreach(var debugInfo in _debugInfo)
+                    {
+                        var previousLocation = previousInstruction?.LocationInt ?? 
+                            instruction.LocationInt - 10;
+
+                        // Account for program being loaded into an address space
+                        var debugAddress = debugInfo.Address + VirtualMachine.RAMStartAddress;
+                        if(debugAddress > previousLocation &&
+                            debugAddress <= instruction.LocationInt)
+                        {
+                            instructionList.Add(debugInfo);
+                        }
+                    }
+                    instructionList.Add(instruction);
+                    previousInstruction = instruction;
+                }
+                return instructionList;
+            }
+        }
+
+        public AssemblyViewModel(VirtualMachine virtualMachine, uint instructionPointer, HashSet<uint> breakpoints)
         {
             _virtualMachine = virtualMachine;
             _breakpoints = breakpoints;
+
+            using(var debugReader = new StreamReader("Debug.dbg"))
+            {
+                var address = int.Parse(debugReader.ReadLine());
+                while(!debugReader.EndOfStream)
+                {
+                    var nextLine = debugReader.ReadLine();
+                    var info = "";
+
+                    while (!int.TryParse(nextLine, out address) 
+                        && !debugReader.EndOfStream)
+                    {
+                        info += nextLine;
+                        nextLine = debugReader.ReadLine();
+                    }
+
+                    _debugInfo.Add(
+                        new DebugInfoViewModel()
+                        {
+                            Address = address,
+                            Info = info,
+                        }); 
+                }
+            }
 
             UpdateAllInstructions(instructionPointer);
         }
@@ -44,12 +101,12 @@ namespace Debugger
         /// </summary>
         void UpdateCurrentInstruction()
         {
-            if (!InstructionStream.ContainsKey(_instructionPointer))
+            if (!_instructionDictionary.ContainsKey(_instructionPointer))
             {
                 LoadInstructionStream();
             }
 
-            var newCurrentInstruction = InstructionStream[_instructionPointer];
+            var newCurrentInstruction = _instructionDictionary[_instructionPointer];
 
             if (newCurrentInstruction != m_currentInstruction)
             {
@@ -73,8 +130,8 @@ namespace Debugger
             const int instructionSizeInWords = 2;
 
             // There are two possible places that programs could be stored: main memory or the BIOS
-            if (_instructionPointer >= Virtual_Machine.VirtualMachine.biosStartAddress &&
-                _instructionPointer < Virtual_Machine.VirtualMachine.displayStartAddress)
+            if (_instructionPointer >= VirtualMachine.biosStartAddress &&
+                _instructionPointer < VirtualMachine.displayStartAddress)
             {
                 var biosData = _virtualMachine.BIOS.Data;
 
@@ -90,22 +147,22 @@ namespace Debugger
             else
             {
                 // If in main memory load a window around the current instruction
-                UInt32 min = Math.Max(_instructionPointer - 20, Virtual_Machine.VirtualMachine.RAMStartAddress);
-                UInt32 max = Math.Min(_instructionPointer + 40, Virtual_Machine.VirtualMachine.RAMStartAddress + Virtual_Machine.VirtualMachine.RAMSize);
+                uint min = Math.Max(_instructionPointer - 20, VirtualMachine.RAMStartAddress);
+                uint max = Math.Min(_instructionPointer + 40, VirtualMachine.RAMStartAddress + VirtualMachine.RAMSize);
 
                 var ramData = _virtualMachine.RAM.GetData(min, max);
 
                 for (int i = 0; i < ramData.Length - 1; i += instructionSizeInWords)
                 {
-                    UInt32 location = (UInt32)i + min;
+                    uint location = (uint)i + min;
                     var ivm = new InstructionViewModel(location, ramData[i], ramData[i + 1], _breakpoints);
                     ivm.BreakpointChanged += () => BreakpointChanged?.Invoke(ivm);
                     newInstructionStream.Add(location, ivm);
                 }
             }
 
-            InstructionStream = newInstructionStream;
-            OnPropertyChanged(nameof(InstructionStream));
+            _instructionDictionary = newInstructionStream;
+            OnPropertyChanged(nameof(_instructionDictionary));
         }
     }
 }

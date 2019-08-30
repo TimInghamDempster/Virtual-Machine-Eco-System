@@ -13,17 +13,26 @@
         <ListBox ItemsSource="{Binding InstructionStream}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal" DataContext="{Binding Value}">
-                        <CheckBox IsChecked="{Binding IsBreakpoint, Mode=TwoWay, FallbackValue=False}"/>
-                        <TextBlock Text="->" Visibility="{Binding IsCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
-                        <TextBlock Text="" Visibility="{Binding IsNotCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
-                        <TextBlock Text="{Binding Location}" Width="50"/>
-                        <TextBlock Text="{Binding ExecutionUnit}" Width="200"/>
-                        <TextBlock Text="{Binding Instruction}" Width="200"/>
-                        <TextBlock Text="{Binding Arg1}" Width="200"/>
-                        <TextBlock Text="{Binding Arg2}" Width="200"/>
-                        <TextBlock Text="{Binding Arg3}" Width="200"/>
-                    </StackPanel>
+                    <ContentControl Content="{Binding}">
+                        <ContentControl.Resources>
+                            <DataTemplate DataType="{x:Type local:DebugInfoViewModel}">
+                                <TextBlock Text="{Binding Info}"/>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type local:InstructionViewModel}">
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsBreakpoint, Mode=TwoWay, FallbackValue=False}"/>
+                                    <TextBlock Text="->" Visibility="{Binding IsCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
+                                    <TextBlock Text="" Visibility="{Binding IsNotCurrentInstruction, Converter={StaticResource BoolToVisibility}}" Width="30"/>
+                                    <TextBlock Text="{Binding Location}" Width="50"/>
+                                    <TextBlock Text="{Binding ExecutionUnit}" Width="200"/>
+                                    <TextBlock Text="{Binding Instruction}" Width="200"/>
+                                    <TextBlock Text="{Binding Arg1}" Width="200"/>
+                                    <TextBlock Text="{Binding Arg2}" Width="200"/>
+                                    <TextBlock Text="{Binding Arg3}" Width="200"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+                    </ContentControl>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

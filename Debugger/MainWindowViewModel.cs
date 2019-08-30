@@ -54,6 +54,7 @@ namespace Debugger
             {
                 comp.StartInfo.FileName = (@"..\..\..\Compiler\Compiler\bin\Debug\Compiler.exe");
                 comp.Start();
+                comp.WaitForExit();
             }
 
             // Spin up a VM
@@ -85,7 +86,14 @@ namespace Debugger
             // Do work is just stepping the VM one instruction
             _runVirtualMachineThread.DoWork += new DoWorkEventHandler((o, e) => StepVM());
             // When we've done one instruction, check if we've been broken into, if not run the next instruction
-            _runVirtualMachineThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler((o, e) => { if (m_running) _runVirtualMachineThread.RunWorkerAsync(); });
+            _runVirtualMachineThread.RunWorkerCompleted += 
+                new RunWorkerCompletedEventHandler((o, e) =>
+                {
+                    if (m_running)
+                    {
+                        _runVirtualMachineThread.RunWorkerAsync();
+                    }
+                });
         }
 
         /// <summary>
