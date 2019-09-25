@@ -41,10 +41,11 @@ namespace EBNFParserTests
         [Fact]
         public void NonLeftRecursionIsAllowed()
         {
+            const int numberOfRules = 3;
             var recursiveGrammar = "a ==> b\nb==>\"c\"\nc ==> \"e\" a | \"f\"";
             var parser = _root.ParserFactory(recursiveGrammar);
 
-            _root.Logger.Messages.Count().Should().Be(0);
+            _root.Logger.Messages.Count().Should().Be(numberOfRules);
         }
 
         [Fact]
@@ -54,7 +55,7 @@ namespace EBNFParserTests
             var parser = _root.ParserFactory(incompleteGrammar);
 
             _root.Logger.Messages.Count().Should().BeGreaterOrEqualTo(1);
-            _root.Logger.Messages.Should().Contain(msg => msg.Contains("b") && msg.Contains("not defined"));
+            _root.Logger.Messages.Should().Contain(msg => msg.Contains("b") && msg.Contains("not defined") && msg.Contains("a ==> b"));
         }
     }
 }

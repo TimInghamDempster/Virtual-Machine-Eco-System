@@ -63,5 +63,13 @@ namespace EBNFParserTests
             _root.Logger.Messages.Count().Should().BeGreaterOrEqualTo(1);
             _root.Logger.Messages.Should().Contain((message) => message.Contains("|") && message.Contains("starts with") && message.Contains(text));
         }
+
+        [Fact]
+        public void EachRuleIsLoggedOnParsing()
+        {
+            var productionRule = _root.ProductionRuleFactory(_testRule);
+
+            _root.Logger.Messages.Should().Contain(msg => msg.Contains(_testRule));
+        }
     }
 }

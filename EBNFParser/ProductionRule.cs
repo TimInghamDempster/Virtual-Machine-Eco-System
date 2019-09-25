@@ -56,6 +56,8 @@ namespace EBNFParser
             _patternFactory = patternFactory;
             Logger = logger;
 
+            logger.Log($"Parsing rule {_ruleString}");
+
             const int rulePartsCount = 2; // name, rule
             var parts = line.Split("==>");
 

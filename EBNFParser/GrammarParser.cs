@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +8,7 @@ namespace EBNFParser
     {
         public GrammarParser(string grammar, Func<string, ProductionRule> ruleFactory, ILogger logger)
         {
-            var textRules = grammar.Split('\n');
+            var textRules = grammar.Replace("\r", "").Split('\n');
 
             foreach (var rule in textRules)
             {
@@ -90,20 +89,23 @@ namespace EBNFParser
                 definedRules.Add(rule.Name);
             }
 
-            var requiredRules = new List<string>();
+            var requiredRules = new List<Tuple<string,string>>();
             foreach(var rule in _productionRules)
             {
-                foreach(var pattern in rule.Patterns)
+                foreach (var pattern in rule.Patterns)
                 {
-                    requiredRules.AddRange(pattern.Rules);
+                    requiredRules.AddRange(
+                        pattern.Rules.Select(
+                            patternRule =>
+                            new Tuple<string, string>(rule.ToString(), patternRule)));
                 }
             }
 
             foreach(var requiredRule in requiredRules)
             {
-                if(!definedRules.Contains(requiredRule))
+                if(!definedRules.Contains(requiredRule.Item2))
                 {
-                    logger.Log($"Error rule {requiredRule} is referenced in a pattern but not defined");
+                    logger.Log($"Error rule {requiredRule.Item2} is referenced in a pattern in rule {requiredRule.Item1} but not defined");
                 }
             }
         }
