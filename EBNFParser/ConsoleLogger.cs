@@ -6,11 +6,14 @@ namespace EBNFParser
 {
     public class ConsoleLogger : ILogger
     {
+        private readonly List<string> _messages = new List<string>();
         public void Log(string message)
         {
             Console.WriteLine(message);
+            _messages.Add(message);
         }
 
-        public IEnumerable<string> Messages => null;
+        public IEnumerable<string> Messages => _messages;
+
     }
 }
