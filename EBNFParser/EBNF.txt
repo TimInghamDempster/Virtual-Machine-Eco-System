@@ -1,14 +1,14 @@
 Program ==> CodeBlock
-CodeBlock => "{" { Statement } "}"
+CodeBlock ==> "{" { Statement } "}"
 Statement ==> Declaration | Assignment | ASM | Conditional
 Declaration ==> IntDeclaration | BoolDeclaration
 IntDeclaration ==>"int" {"'"} Label ";"
-BooleanDeclaration => "bool" {"'"} Label ";"
+BoolDeclaration ==> "bool" {"'"} Label ";"
 Assignment ==> IntAssignment | BoolAssignment
 IntAssignment ==> Label "=" IntExpression ";"
 BoolAssignment ==> Label "=" BoolExpression ";"
 IntExpression ==> Primitive {BinaryOperator Primitive}
-Primitive ==> Integer | "(" Expression ")" | UnaryOperator Primitive | Label
+Primitive ==> Integer | "(" IntExpression ")" | UnaryOperator Primitive | Label
 BinaryOperator ==> "+" | "-" | "*" | "/"
 UnaryOperator ==> "-"
 BooleanValue ==> "true" | "false"
@@ -17,3 +17,7 @@ BoolSubExpression ==> BooleanValue | Primitive BooleanOperator Primitive | "(" B
 BooleanOperator ==> "==" | "!=" | ">" | "<" | ">=" | "<="
 BooleanConjunction ==> "&&" | "||"
 Conditional ==> "if" "(" BoolExpression ")" CodeBlock
+Label ==> *
+ASM ==> *
+Integer ==> *
+* ==> ""
