@@ -71,5 +71,16 @@ namespace EBNFParserTests
 
             _root.Logger.Messages.Should().Contain(msg => msg.Contains(_testRule));
         }
+
+        [Fact]
+        public void ProductionRuleCanContainARegex()
+        {
+            var text = "a ==> Regex[0-9]";
+
+            var productionRule = _root.ProductionRuleFactory(text);
+
+            productionRule.Patterns.First().Elements.Should().Contain(elm => elm.Type == ElementType.Regex);
+        }
+
     }
 }

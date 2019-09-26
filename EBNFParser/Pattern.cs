@@ -77,6 +77,7 @@ namespace EBNFParser
             Func<string, GrammarElement> terminalFactory,
             Func<string, GrammarElement> ruleFactory,
             Func<string, GrammarElement> repeatFactory,
+            Func<string, GrammarElement> regexFactory,
             ILogger logger,
             bool isRepeat)
         {
@@ -87,6 +88,11 @@ namespace EBNFParser
             _isRepeat = isRepeat;
 
             _patternString = text;
+
+            if(text.StartsWith("Regex"))
+            {
+                _elements.Add(regexFactory(text.Replace("Regex", "")));
+            }
 
             var stateMachine= new PatternStateMachine();
             foreach(var character in text)

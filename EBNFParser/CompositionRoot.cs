@@ -12,11 +12,26 @@ namespace EBNFParser
         public Func<string, ProductionRule> ProductionRuleFactory =>
             (productionRuleString) => new ProductionRule(productionRuleString, NormalPatternFactory, Logger);
 
-        public Func<string, Pattern> NormalPatternFactory
-            =>
-            (patternString) => new Pattern(patternString, TerminalFactory, RuleElementFactory, RepeatElementFactory, Logger, false);
+        public Func<string, Pattern> NormalPatternFactory =>
+            (patternString) => 
+            new Pattern(
+                patternString,
+                TerminalFactory, 
+                RuleElementFactory,
+                RepeatElementFactory, 
+                RegexElementFactory,
+                Logger,
+                false);
+
         public Func<string, Pattern> RepeatPatternFactory =>
-            (patternString) => new Pattern(patternString, TerminalFactory, RuleElementFactory, RepeatElementFactory, Logger, true);
+            (patternString) => 
+            new Pattern(
+                patternString,
+                TerminalFactory, 
+                RuleElementFactory,
+                RepeatElementFactory, 
+                RegexElementFactory,
+                Logger, true);
 
         public Func<string, GrammarElement> TerminalFactory =>
             (terminalString) => new GrammarElement(terminalString, ElementType.Terminal);
@@ -26,5 +41,8 @@ namespace EBNFParser
 
         public Func<string, GrammarElement> RepeatElementFactory =>
             (repeatString) => new GrammarElement(repeatString, ElementType.Repeat, RepeatPatternFactory(repeatString));
+
+        public Func<string, GrammarElement> RegexElementFactory =>
+            (regexString) => new GrammarElement(regexString, ElementType.Regex);
     }
 }

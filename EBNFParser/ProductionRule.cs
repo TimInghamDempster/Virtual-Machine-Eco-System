@@ -74,6 +74,11 @@ namespace EBNFParser
                 logger.Log($"Error: production rule {line} does not have a name");
             }
 
+            if(parts[1].StartsWith("Regex"))
+            {
+                _patterns.Add(_patternFactory(parts[1]));
+            }
+
             var stateMachine = new RuleStateMachine();
             foreach(var character in parts[1])
             {
