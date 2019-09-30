@@ -89,9 +89,10 @@ namespace EBNFParser
 
             _patternString = text;
 
-            if(text.StartsWith("Regex"))
+            if(text.Contains("Regex"))
             {
                 _elements.Add(regexFactory(text.Replace("Regex", "")));
+                return;
             }
 
             var stateMachine= new PatternStateMachine();

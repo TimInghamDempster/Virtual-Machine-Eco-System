@@ -57,5 +57,16 @@ namespace EBNFParserTests
             _root.Logger.Messages.Count().Should().BeGreaterOrEqualTo(1);
             _root.Logger.Messages.Should().Contain(msg => msg.Contains("b") && msg.Contains("not defined") && msg.Contains("a ==> b"));
         }
+
+        [Fact]
+        public void RegexsDontCountAsRulesForValidation()
+        {
+            const int ruleCount = 1;
+            var text = "a ==> Regex[b]+|[cd]";
+
+            var parser = _root.ParserFactory(text);
+
+            _root.Logger.Messages.Count().Should().Be(ruleCount);
+        }
     }
 }

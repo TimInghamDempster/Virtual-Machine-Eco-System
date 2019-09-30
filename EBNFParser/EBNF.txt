@@ -17,7 +17,7 @@ BoolSubExpression ==> BooleanValue | Primitive BooleanOperator Primitive | "(" B
 BooleanOperator ==> "==" | "!=" | ">" | "<" | ">=" | "<="
 BooleanConjunction ==> "&&" | "||"
 Conditional ==> "if" "(" BoolExpression ")" CodeBlock
-Label ==> *
-ASM ==> *
-Integer ==> *
-* ==> ""
+Label ==> Regex^[a-zA-Z_]\w+$
+Integer ==> Regex^[0-9]+$
+ASM ==> "<ASM>" ASMContent "</ASM>"
+ASMContent ==> Regex^((?!</ASM>).)*$
