@@ -1,23 +1,25 @@
 Program ==> CodeBlock
-CodeBlock ==> "{" { Statement } "}"
+CodeBlock ==> OpenPeren { Statement } ClosePeren
 Statement ==> Declaration | Assignment | ASM | Conditional
 Declaration ==> IntDeclaration | BoolDeclaration
-IntDeclaration ==>"int" {"'"} Label ";"
-BoolDeclaration ==> "bool" {"'"} Label ";"
+IntDeclaration ==> ^int$ {^'$} Label ^;$
+BoolDeclaration ==> ^bool$ {^'$} Label ^;$
 Assignment ==> IntAssignment | BoolAssignment
-IntAssignment ==> Label "=" IntExpression ";"
-BoolAssignment ==> Label "=" BoolExpression ";"
+IntAssignment ==> Label ^=$ IntExpression ^;$
+BoolAssignment ==> Label ^=$ BoolExpression ^;$
 IntExpression ==> Primitive {BinaryOperator Primitive}
-Primitive ==> Integer | "(" IntExpression ")" | UnaryOperator Primitive | Label
-BinaryOperator ==> "+" | "-" | "*" | "/"
-UnaryOperator ==> "-"
-BooleanValue ==> "true" | "false"
+Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label
+BinaryOperator ==> ^+$ | ^-$ | ^*$ | ^/$
+UnaryOperator ==> ^-$
+BooleanValue ==> ^true$ | ^false$
 BoolExpression ==> BoolSubExpression { BooleanConjunction BoolSubExpression }
-BoolSubExpression ==> BooleanValue | Primitive BooleanOperator Primitive | "(" BoolExpression ")"
-BooleanOperator ==> "==" | "!=" | ">" | "<" | ">=" | "<="
-BooleanConjunction ==> "&&" | "||"
-Conditional ==> "if" "(" BoolExpression ")" CodeBlock
-Label ==> Regex^[a-zA-Z_]\w+$
-Integer ==> Regex^[0-9]+$
-ASM ==> "<ASM>" ASMContent "</ASM>"
-ASMContent ==> Regex^((?!</ASM>).)*$
+BoolSubExpression ==> BooleanValue | Primitive BooleanOperator Primitive | OpenPeren BoolExpression ClosePeren
+BooleanOperator ==> ^==$ | ^!=$ | ^>$ | ^<$ | ^>=$ | ^<=$
+BooleanConjunction ==> ^&&$ | ^||$
+Conditional ==> ^if$ OpenPeren BoolExpression ClosePeren CodeBlock
+OpenPeren ==> ^($
+ClosePeren ==> ^)$
+Label ==> ^[a-zA-Z_][\w_-]*$
+Integer ==> ^[0-9]+$
+ASM ==> ^<ASM>$ ASMContent ^</ASM>$
+ASMContent ==> ^((?!</ASM>).)*$

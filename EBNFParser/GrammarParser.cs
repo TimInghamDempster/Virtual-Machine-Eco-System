@@ -94,8 +94,6 @@ namespace EBNFParser
             {
                 foreach (var pattern in rule.Patterns)
                 {
-                    if (pattern.Elements.First().Type == ElementType.Regex) continue;
-
                     requiredRules.AddRange(
                         pattern.Rules.
                         Select(patternRule =>

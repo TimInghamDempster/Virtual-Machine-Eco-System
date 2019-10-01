@@ -4,8 +4,7 @@
     {
         Terminal,
         Rule,
-        Repeat,
-        Regex
+        Repeat
     }
 
     public class GrammarElement

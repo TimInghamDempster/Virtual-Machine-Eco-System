@@ -8,7 +8,7 @@ namespace EBNFParserTests
 {
     public class PatternTests
     {
-        private string _testText = "a \"b\" \"c\" { d e \"f\"}";
+        private string _testText = "a ^b$ ^c$ { d e ^f$}";
         private readonly CompositionRoot _root = new CompositionRoot();
 
         [Fact]
@@ -24,7 +24,7 @@ namespace EBNFParserTests
         [Fact]
         public void UnclosedTerminalIsReported()
         {
-            var newText = _testText + " \"d";
+            var newText = _testText + " ^d";
 
             var pattern =_root.NormalPatternFactory(newText);
 
@@ -64,7 +64,7 @@ namespace EBNFParserTests
         [Fact]
         public void UnclosedRepeatsAreReported()
         {
-            var text = "a \"b\" \"c\" { d e \"f\"";
+            var text = "a ^b$ ^c$ { d e ^f$";
 
             var pattern = _root.NormalPatternFactory(text);
 
@@ -75,18 +75,18 @@ namespace EBNFParserTests
         [Fact]
         public void NestedRepeatsAreReported()
         {
-            var text = "a \"b\" \"c\" { d {e \"f\"} }";
+            var text = "a ^b$ ^c$ { d {e ^f$} }";
 
             var pattern = _root.NormalPatternFactory(text);
 
             _root.Logger.Messages.Count().Should().BeGreaterOrEqualTo(1);
-            _root.Logger.Messages.Should().Contain((message) => message.Contains("repeat") && message.Contains("nested") && message.Contains("{e \"f\""));
+            _root.Logger.Messages.Should().Contain((message) => message.Contains("repeat") && message.Contains("nested") && message.Contains("{e ^f$"));
         }
 
         [Fact]
         public void MultiCharElementsAreRecognised()
         {
-            var text = "abc \"1234\"";
+            var text = "abc ^1234$";
 
             var pattern = _root.NormalPatternFactory(text);
 
@@ -97,7 +97,7 @@ namespace EBNFParserTests
         [Fact]
         public void OpenBraceIsAnAcceptableTerminal()
         {
-            var text = "\"{\"";
+            var text = "^{$";
 
             var pattern = _root.NormalPatternFactory(text);
 
@@ -108,7 +108,7 @@ namespace EBNFParserTests
         [Fact]
         public void CloseBraceIsAnAcceptableTerminal()
         {
-            var text = "\"}\"";
+            var text = "^}$";
 
             var pattern = _root.NormalPatternFactory(text);
 

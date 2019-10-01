@@ -6,7 +6,7 @@ namespace EBNFParserTests
 {
     public class GrammarParserTests
     {
-        private string testGrammar = "a ==> b\nb==>\"c\"\nd ==> \"e\" | \"f\"";
+        private string testGrammar = "a ==> b\nb==> ^c$ \nd ==> ^e$ | ^f$";
         private readonly CompositionRoot _root = new CompositionRoot();
 
         [Fact]
@@ -42,7 +42,7 @@ namespace EBNFParserTests
         public void NonLeftRecursionIsAllowed()
         {
             const int numberOfRules = 3;
-            var recursiveGrammar = "a ==> b\nb==>\"c\"\nc ==> \"e\" a | \"f\"";
+            var recursiveGrammar = "a ==> b\nb==>^c$\nc ==> ^e$ a | ^f$";
             var parser = _root.ParserFactory(recursiveGrammar);
 
             _root.Logger.Messages.Count().Should().Be(numberOfRules);
@@ -51,22 +51,11 @@ namespace EBNFParserTests
         [Fact]
         public void MissingRulesAreReported()
         {
-            var incompleteGrammar = "a ==> b\nc ==> \"e\" a | \"f\"";
+            var incompleteGrammar = "a ==> b\nc ==> ^e$ a | ^f$";
             var parser = _root.ParserFactory(incompleteGrammar);
 
             _root.Logger.Messages.Count().Should().BeGreaterOrEqualTo(1);
             _root.Logger.Messages.Should().Contain(msg => msg.Contains("b") && msg.Contains("not defined") && msg.Contains("a ==> b"));
-        }
-
-        [Fact]
-        public void RegexsDontCountAsRulesForValidation()
-        {
-            const int ruleCount = 1;
-            var text = "a ==> Regex[b]+|[cd]";
-
-            var parser = _root.ParserFactory(text);
-
-            _root.Logger.Messages.Count().Should().Be(ruleCount);
         }
     }
 }

@@ -74,12 +74,6 @@ namespace EBNFParser
                 logger.Log($"Error: production rule {line} does not have a name");
             }
 
-            if (parts[1].Contains("Regex"))
-            {
-                _patterns.Add(_patternFactory(parts[1]));
-                return;
-            }
-
             var stateMachine = new RuleStateMachine();
             foreach(var character in parts[1])
             {
@@ -121,7 +115,7 @@ namespace EBNFParser
                     break;
                 case ' ':
                     break;
-                case '\"':
+                case '^':
                     stateMachine.CurrentState = RuleStateMachine.State.ProcessingTerminal;
                     stateMachine.CurrentString.Append(character);
                     break;
@@ -136,7 +130,7 @@ namespace EBNFParser
         {
             switch (character)
             {
-                case '\"':
+                case '$':
                     stateMachine.CurrentState = RuleStateMachine.State.ProcessingNonTerminal;
                     stateMachine.CurrentString.Append(character);
                     break;
@@ -150,7 +144,7 @@ namespace EBNFParser
         {
             switch (character)
             {
-                case '\"':
+                case '^':
                     stateMachine.CurrentState = RuleStateMachine.State.ProcessingTerminal;
                     stateMachine.CurrentString.Append(character);
                     break;

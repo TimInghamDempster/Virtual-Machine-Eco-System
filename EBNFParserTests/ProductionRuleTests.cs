@@ -8,7 +8,7 @@ namespace EBNFParserTests
 {
     public class ProductionRuleTests
     {
-        private readonly string _testRule = "a ==> \"b\" | \"c\" | \"d\" | \"e\"";
+        private readonly string _testRule = "a ==> ^b$ | ^c$ | ^d$ | ^e$";
         private readonly CompositionRoot _root = new CompositionRoot();
 
         [Fact]
@@ -50,7 +50,7 @@ namespace EBNFParserTests
         [Fact]
         public void PipeDoesntSplitPatternsInATerminal()
         {
-            var productionRule = _root.ProductionRuleFactory("a ==> \"c| b\"");
+            var productionRule = _root.ProductionRuleFactory("a ==> ^c| b$");
             productionRule.Patterns.Count().Should().Be(1);
         }
 
@@ -71,16 +71,5 @@ namespace EBNFParserTests
 
             _root.Logger.Messages.Should().Contain(msg => msg.Contains(_testRule));
         }
-
-        [Fact]
-        public void ProductionRuleCanContainARegex()
-        {
-            var text = "a ==> Regex[0-9]";
-
-            var productionRule = _root.ProductionRuleFactory(text);
-
-            productionRule.Patterns.First().Elements.Should().Contain(elm => elm.Type == ElementType.Regex);
-        }
-
     }
 }
