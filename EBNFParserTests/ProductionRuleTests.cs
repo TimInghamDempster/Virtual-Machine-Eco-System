@@ -1,6 +1,4 @@
-﻿using System;
-using EBNFParser;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Xunit;
 using System.Linq;
 

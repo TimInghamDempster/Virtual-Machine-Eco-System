@@ -7,24 +7,15 @@ namespace EBNFParser
 {
     public class ProductionRule
     {
-        public class RuleStateMachine
+        public enum State
         {
-            public enum State
-            {
-                Initialising,
-                ProcessingTerminal,
-                ProcessingNonTerminal
-            }
-
-            public State CurrentState { get; set; }
-            public StringBuilder CurrentString { get; set; } = new StringBuilder();
-
-            internal void Reset()
-            {
-                CurrentString = new StringBuilder();
-                CurrentState = State.Initialising;
-            }
+            Initialising,
+            ProcessingTerminal,
+            ProcessingNonTerminal
         }
+
+        public State CurrentState { get; set; }
+        public StringBuilder CurrentString { get; set; } = new StringBuilder();
 
         private readonly string _ruleString;
 
@@ -34,19 +25,8 @@ namespace EBNFParser
 
         public ILogger Logger;
 
-        public IEnumerable<GrammarElement> Terminals
-        {
-            get
-            {
-                foreach (var pattern in _patterns)
-                {
-                    foreach (var element in pattern.Terminals)
-                    {
-                        yield return element;
-                    }
-                }
-            }
-        }
+        public IEnumerable<GrammarElement> Terminals =>
+            _patterns.SelectMany(p => p.Terminals);
 
         public string Name { get; }
 
@@ -74,13 +54,12 @@ namespace EBNFParser
                 logger.Log($"Error: production rule {line} does not have a name");
             }
 
-            var stateMachine = new RuleStateMachine();
             foreach(var character in parts[1])
             {
-                ProcessCharacter(stateMachine, character);
+                ProcessCharacter(character);
             }
 
-            _patterns.Add(_patternFactory(stateMachine.CurrentString.ToString()));
+            _patterns.Add(_patternFactory(CurrentString.ToString()));
         }
 
         public override string ToString()
@@ -88,25 +67,25 @@ namespace EBNFParser
             return _ruleString;
         }
 
-        private void ProcessCharacter(RuleStateMachine stateMachine, char character)
+        private void ProcessCharacter(char character)
         {
-            switch (stateMachine.CurrentState)
+            switch (CurrentState)
             {
-                case RuleStateMachine.State.Initialising:
-                    ProcessInitialChar(stateMachine, character);
+                case State.Initialising:
+                    ProcessInitialChar(character);
                     break;
-                case RuleStateMachine.State.ProcessingTerminal:
-                    ProcessTerminalChar(stateMachine, character);
+                case State.ProcessingTerminal:
+                    ProcessTerminalChar(character);
                     break;
-                case RuleStateMachine.State.ProcessingNonTerminal:
-                    ProcessNonTerminalChar(stateMachine, character);
+                case State.ProcessingNonTerminal:
+                    ProcessNonTerminalChar(character);
                     break;
                 default:
                     throw new NotImplementedException();
             }
         }
 
-        private void ProcessInitialChar(RuleStateMachine stateMachine, char character)
+        private void ProcessInitialChar(char character)
         {
             switch(character)
             {
@@ -116,45 +95,45 @@ namespace EBNFParser
                 case ' ':
                     break;
                 case '^':
-                    stateMachine.CurrentState = RuleStateMachine.State.ProcessingTerminal;
-                    stateMachine.CurrentString.Append(character);
+                    CurrentState = State.ProcessingTerminal;
+                    CurrentString.Append(character);
                     break;
                 default:
-                    stateMachine.CurrentState = RuleStateMachine.State.ProcessingNonTerminal;
-                    stateMachine.CurrentString.Append(character);
+                    CurrentState = State.ProcessingNonTerminal;
+                    CurrentString.Append(character);
                     break;
             }
         }
 
-        private void ProcessTerminalChar(RuleStateMachine stateMachine, char character)
+        private void ProcessTerminalChar(char character)
         {
             switch (character)
             {
                 case '$':
-                    stateMachine.CurrentState = RuleStateMachine.State.ProcessingNonTerminal;
-                    stateMachine.CurrentString.Append(character);
+                    CurrentState = State.ProcessingNonTerminal;
+                    CurrentString.Append(character);
                     break;
                 default:
-                    stateMachine.CurrentString.Append(character);
+                    CurrentString.Append(character);
                     break;
             }
         }
 
-        private void ProcessNonTerminalChar(RuleStateMachine stateMachine, char character)
+        private void ProcessNonTerminalChar(char character)
         {
             switch (character)
             {
                 case '^':
-                    stateMachine.CurrentState = RuleStateMachine.State.ProcessingTerminal;
-                    stateMachine.CurrentString.Append(character);
+                    CurrentState = State.ProcessingTerminal;
+                    CurrentString.Append(character);
                     break;
                 case '|':
-                    stateMachine.CurrentState = RuleStateMachine.State.Initialising;
-                    _patterns.Add(_patternFactory(stateMachine.CurrentString.ToString()));
-                    stateMachine.CurrentString = new StringBuilder();
+                    CurrentState = State.Initialising;
+                    _patterns.Add(_patternFactory(CurrentString.ToString()));
+                    CurrentString = new StringBuilder();
                     break;
                 default:
-                    stateMachine.CurrentString.Append(character);
+                    CurrentString.Append(character);
                     break;
             }
         }
