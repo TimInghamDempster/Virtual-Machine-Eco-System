@@ -14,42 +14,28 @@ namespace EBNFParser
         private readonly bool _isRepeat;
         private readonly string _patternString;
 
-        public class PatternStateMachine
+        public enum State
         {
-            public enum State
-            {
-                Initialising,
-                ProcessingTerminal,
-                ProcessingRule,
-                ProcessingRepeat
-            }
+            Initialising,
+            ProcessingTerminal,
+            ProcessingRule,
+            ProcessingRepeat
+        }
 
-            public State CurrentState { get; set; }
-            public StringBuilder CurrentString { get; set; } = new StringBuilder();
+        private State _currentState;
+        private StringBuilder _currentString = new StringBuilder();
 
-            internal void Reset()
-            {
-                CurrentString = new StringBuilder();
-                CurrentState = State.Initialising;
-            }
+        private void Reset()
+        {
+            _currentString = new StringBuilder();
+            _currentState = State.Initialising;
         }
 
         public List<GrammarElement> _elements = new List<GrammarElement>();
         public IEnumerable<GrammarElement> Elements => _elements;
 
         public IEnumerable<GrammarElement> Terminals
-        {
-            get
-            {
-                foreach (var element in Elements)
-                {
-                    if(element.IsTerminal)
-                    {
-                        yield return element;
-                    }
-                }
-            }
-        }
+            => Elements.Where(element => element.IsTerminal);
 
         public IEnumerable<string> Rules
         {
@@ -88,133 +74,132 @@ namespace EBNFParser
 
             _patternString = text;
 
-            var stateMachine= new PatternStateMachine();
             foreach(var character in text)
             {
-                ProcessChar(stateMachine, character);
+                ProcessChar(character);
             }
 
-            if(stateMachine.CurrentState == PatternStateMachine.State.ProcessingTerminal)
+            if(_currentState == State.ProcessingTerminal)
             {
                 _logger.Log($"Error: terminal not closed at end of pattern {text}");
             }
 
-            if (stateMachine.CurrentState == PatternStateMachine.State.ProcessingRepeat)
+            if (_currentState == State.ProcessingRepeat)
             {
                 _logger.Log($"Error: repeat not closed at end of pattern {text}");
             }
 
-            if(stateMachine.CurrentState == PatternStateMachine.State.ProcessingRule)
+            if(_currentState == State.ProcessingRule)
             {
-                _elements.Add(_ruleFactory(stateMachine.CurrentString.ToString()));
+                _elements.Add(_ruleFactory(_currentString.ToString()));
             }
         }
 
-        private void ProcessChar(PatternStateMachine stateMachine, char character)
+        private void ProcessChar(char character)
         {
-            switch (stateMachine.CurrentState)
+            switch (_currentState)
             {
-                case PatternStateMachine.State.Initialising:
-                    ProcessInitialChar(stateMachine, character);
+                case State.Initialising:
+                    ProcessInitialChar(character);
                     break;
-                case PatternStateMachine.State.ProcessingTerminal:
-                    ProcessTerminalChar(stateMachine, character);
+                case State.ProcessingTerminal:
+                    ProcessTerminalChar(character);
                     break;
-                case PatternStateMachine.State.ProcessingRule:
-                    ProcessRuleChar(stateMachine, character);
+                case State.ProcessingRule:
+                    ProcessRuleChar(character);
                     break;
-                case PatternStateMachine.State.ProcessingRepeat:
-                    ProcessRepeatChar(stateMachine, character);
+                case State.ProcessingRepeat:
+                    ProcessRepeatChar(character);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void ProcessRepeatChar(PatternStateMachine stateMachine, char character)
+        private void ProcessRepeatChar(char character)
         {
             switch(character)
             {
                 case '}':
-                    _elements.Add(_repeatFactory(stateMachine.CurrentString.ToString()));
-                    stateMachine.Reset();
+                    _elements.Add(_repeatFactory(_currentString.ToString()));
+                    Reset();
                     break;
                 default:
-                    stateMachine.CurrentString.Append(character);
+                    _currentString.Append(character);
                     break;
             }
         }
 
         // Rules are split by spaces, so keep consuming chars until we find one
-        private void ProcessRuleChar(PatternStateMachine stateMachine, char character)
+        private void ProcessRuleChar(char character)
         {
             switch(character)
             {
                 case ' ':
-                    _elements.Add(_ruleFactory(stateMachine.CurrentString.ToString()));
-                    stateMachine.Reset();
+                    _elements.Add(_ruleFactory(_currentString.ToString()));
+                    Reset();
                     break;
                 case '{':
-                    TryEnterRepeatProcessing(stateMachine);
+                    TryEnterRepeatProcessing();
                     break;
                 case '}':
-                    stateMachine.Reset();
+                    Reset();
                     _logger.Log($"Error: attempted to close a reapeat that does not exist in pattern {_patternString}");
                     break;
                 default:
-                    stateMachine.CurrentString.Append(character);
+                    _currentString.Append(character);
                     break;
             }
         }
 
-        private void TryEnterRepeatProcessing(PatternStateMachine stateMachine)
+        private void TryEnterRepeatProcessing()
         {
             if (_isRepeat == false)
             {
-                stateMachine.CurrentState = PatternStateMachine.State.ProcessingRepeat;
+                _currentState = State.ProcessingRepeat;
             }
             else
             {
-                stateMachine.Reset();
+                Reset();
                 _logger.Log($"Error: repeat sequences cannot be nested, atempted repeat {_patternString}");
             }
         }
 
         // We are now in a terminal, keep going until we meet the closing
         // char or the end of the text
-        private void ProcessTerminalChar(PatternStateMachine stateMachine, char character)
+        private void ProcessTerminalChar(char character)
         {
             switch (character)
             {
                 case '$':
-                    _elements.Add(_terminalFactory(stateMachine.CurrentString.ToString()));
-                    stateMachine.Reset();
+                    _elements.Add(_terminalFactory(_currentString.ToString()));
+                    Reset();
                     break;
                 default:
-                    stateMachine.CurrentString.Append(character);
+                    _currentString.Append(character);
                     break;
             }
         }
 
-        private void ProcessInitialChar(PatternStateMachine stateMachine, char character)
+        private void ProcessInitialChar(char character)
         {
             switch (character)
             {
                 case '^':
-                    stateMachine.CurrentState = PatternStateMachine.State.ProcessingTerminal;
+                    _currentState = State.ProcessingTerminal;
                     break;
                 case '{':
-                    TryEnterRepeatProcessing(stateMachine);
+                    TryEnterRepeatProcessing();
                     break;
                 case '}':
-                    stateMachine.CurrentState = PatternStateMachine.State.Initialising;
+                    _currentState = State.Initialising;
                     _logger.Log("Error: first character in pattern cannot end a repeat");
                     break;
                 case ' ':
                     break;
                 default:
-                    stateMachine.CurrentState = PatternStateMachine.State.ProcessingRule;
-                    stateMachine.CurrentString = new StringBuilder(character.ToString());
+                    _currentState = State.ProcessingRule;
+                    _currentString = new StringBuilder(character.ToString());
                     break;
             }
         }

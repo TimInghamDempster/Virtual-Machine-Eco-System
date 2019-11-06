@@ -14,8 +14,8 @@ namespace EBNFParser
             ProcessingNonTerminal
         }
 
-        public State CurrentState { get; set; }
-        public StringBuilder CurrentString { get; set; } = new StringBuilder();
+        private State _currentState;
+        private StringBuilder _currentString  = new StringBuilder();
 
         private readonly string _ruleString;
 
@@ -59,7 +59,7 @@ namespace EBNFParser
                 ProcessCharacter(character);
             }
 
-            _patterns.Add(_patternFactory(CurrentString.ToString()));
+            _patterns.Add(_patternFactory(_currentString.ToString()));
         }
 
         public override string ToString()
@@ -69,7 +69,7 @@ namespace EBNFParser
 
         private void ProcessCharacter(char character)
         {
-            switch (CurrentState)
+            switch (_currentState)
             {
                 case State.Initialising:
                     ProcessInitialChar(character);
@@ -95,12 +95,12 @@ namespace EBNFParser
                 case ' ':
                     break;
                 case '^':
-                    CurrentState = State.ProcessingTerminal;
-                    CurrentString.Append(character);
+                    _currentState = State.ProcessingTerminal;
+                    _currentString.Append(character);
                     break;
                 default:
-                    CurrentState = State.ProcessingNonTerminal;
-                    CurrentString.Append(character);
+                    _currentState = State.ProcessingNonTerminal;
+                    _currentString.Append(character);
                     break;
             }
         }
@@ -110,11 +110,11 @@ namespace EBNFParser
             switch (character)
             {
                 case '$':
-                    CurrentState = State.ProcessingNonTerminal;
-                    CurrentString.Append(character);
+                    _currentState = State.ProcessingNonTerminal;
+                    _currentString.Append(character);
                     break;
                 default:
-                    CurrentString.Append(character);
+                    _currentString.Append(character);
                     break;
             }
         }
@@ -124,16 +124,16 @@ namespace EBNFParser
             switch (character)
             {
                 case '^':
-                    CurrentState = State.ProcessingTerminal;
-                    CurrentString.Append(character);
+                    _currentState = State.ProcessingTerminal;
+                    _currentString.Append(character);
                     break;
                 case '|':
-                    CurrentState = State.Initialising;
-                    _patterns.Add(_patternFactory(CurrentString.ToString()));
-                    CurrentString = new StringBuilder();
+                    _currentState = State.Initialising;
+                    _patterns.Add(_patternFactory(_currentString.ToString()));
+                    _currentString = new StringBuilder();
                     break;
                 default:
-                    CurrentString.Append(character);
+                    _currentString.Append(character);
                     break;
             }
         }
