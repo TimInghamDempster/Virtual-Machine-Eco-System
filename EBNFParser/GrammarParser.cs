@@ -32,7 +32,7 @@ namespace EBNFParser
             }
         }
 
-        private ProductionRule FindPath(ProductionRule rule1, ProductionRule rule2)
+        private ProductionRule? FindPath(ProductionRule rule1, ProductionRule rule2)
         {
             HashSet<string> exploredRules = new HashSet<string>();
 
@@ -46,7 +46,7 @@ namespace EBNFParser
             return null;
         }
 
-        private ProductionRule ExploreRule(ProductionRule currentRule, ProductionRule targetRule, HashSet<string> exploredRules)
+        private ProductionRule? ExploreRule(ProductionRule currentRule, ProductionRule targetRule, HashSet<string> exploredRules)
         {
             foreach(var pattern in currentRule.Patterns)
             {

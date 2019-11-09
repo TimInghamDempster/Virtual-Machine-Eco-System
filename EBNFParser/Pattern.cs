@@ -47,7 +47,7 @@ namespace EBNFParser
                     {
                         yield return element.Name;
                     }
-                    else if(element.IsRepeat)
+                    else if(element.IsRepeat && element.SubPattern != null)
                     {
                         foreach(var rule in element.SubPattern.Rules)
                         {

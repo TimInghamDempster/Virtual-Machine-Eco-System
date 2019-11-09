@@ -9,7 +9,7 @@
 
     public class GrammarElement
     {
-        public Pattern SubPattern { get; }
+        public Pattern? SubPattern { get; }
         public string Name { get; }
 
         public bool IsTerminal => Type == ElementType.Terminal;
@@ -18,7 +18,7 @@
 
         public ElementType Type {get;}
 
-        public GrammarElement(string name, ElementType type, Pattern subPattern = null)
+        public GrammarElement(string name, ElementType type, Pattern? subPattern = null)
         {
             Name = name;
             Type = type;

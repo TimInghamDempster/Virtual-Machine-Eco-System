@@ -28,7 +28,7 @@ namespace EBNFParser
         public IEnumerable<GrammarElement> Terminals =>
             _patterns.SelectMany(p => p.Terminals);
 
-        public string Name { get; }
+        public string Name { get; } = "";
 
         public ProductionRule(string line, Func<string, Pattern> patternFactory, ILogger logger)
         {
