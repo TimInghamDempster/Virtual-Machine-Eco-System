@@ -1,0 +1,320 @@
+{
+int' temp;
+
+temp = Tag(KeyboardInterruptHandler);							// Set register 0 to address 6 (keyboard ISR address)
+<asm>
+Store     StoreToLiteralLocation      0  0 32					// Write keyboard ISR address from register 0 to PIC
+</asm>
+
+// Set up block device interrupt handler
+temp = Tag(BlockDeviceInterruptHandler);						// Set register 0 to address 10 (SSD ISR address)
+<asm>
+Store     StoreToLiteralLocation      0  0 33 					// Write block device ISR address from register 0 to PIC
+</asm>
+
+temp = Tag(ProgramStart);										// Will store the program entry point into register 0
+<asm>
+Branch    JumpRegister                0  0 0					// Jump to program start
+</asm>
+
+Tag(KeyboardInterruptHandler);
+<asm>
+Load      LoadFromLiteralLocation    15  0 3588					// Copy last key pressed into register 9
+Interrupt InterruptReturn             0  0 0					// Return to execution
+</asm>
+
+Tag(BlockDeviceInterruptHandler);
+<asm>
+Store     StoreToLiteralLocation     15  0 134221319			// Acknowledge so device stops squawking
+Interrupt InterruptReturn             0  0 0					// Return to execution
+</asm>
+
+Tag(WriteString);
+int' returnAddress;
+int' charsToWrite;
+int' charsWritten;
+int' displayIndex;
+int' stringAddress;
+int displayStartAddress;
+int' displayCommandBufferAddress;
+displayCommandBufferAddress = 3584;
+displayStartAddress = 1536;
+charsWritten = 0;
+
+Tag(WriteNextChar);
+temp = stringAddress + charsWritten;
+<asm>
+Load      LoadFromRegisterLocation    5  0 0					// Load next char into register 2
+</asm>
+temp = displayIndex + charsWritten + displayStartAddress;
+<asm>
+Store     StoreToRegisterLocation     0  5 0					// Store char from register 2 to (display + register 0)
+</asm>
+
+charsWritten = charsWritten + 1;
+if(charsWritten < charsToWrite)
+{
+temp = Tag(WriteNextChar);
+<asm>
+Branch    JumpRegister				  0  0 0					// Loop if not written enough characters
+</asm>
+}
+
+// Flush Screen
+temp = displayCommandBufferAddress;
+<asm>
+ALU       SetLiteral                  1  0 0					// Set the screen refresh command into register 0
+Store     StoreToRegisterLocation     0  1 0					// Write refresh command to display command buffer.
+// Jump back
+</asm>
+temp = returnAddress;
+<asm>
+Branch    JumpRegister                0  0 0					// Jump to location passed in returnAddress
+</asm>
+
+Tag(ProgramStart);
+// Draw hello string
+displayIndex = 0;
+stringAddress = Tag(hello);
+returnAddress = Tag(HandleUserInput);
+charsToWrite = 24;
+temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
+<asm>
+Branch    JumpRegister                0  0 0  					// Jump to string writing function
+</asm>
+
+Tag(HandleUserInput);
+int inputNameLength;
+int' nameDisplayAddress;
+nameDisplayAddress = displayStartAddress + 79;
+int' RAMStartAddress;
+RAMStartAddress = 3589;
+int stringPosOffset;
+<asm>
+// Handle keyboard input
+ALU       SetLiteral                  2  0 13					// Add newline char to r2 for comparison
+</asm>
+temp = Tag(DrawResponse);
+<asm>
+ALU       Copy						  5  0 0					// Set break pointer
+</asm>
+Tag(TestKeyPressed);
+temp = Tag(TestKeyPressed);
+<asm>
+Branch    JumpEqualRegister			 15 14 0					// Loop until key pressed
+Branch    JumpEqualRegister          15  2 5					// Break out of loop if enter pressed
+</asm>
+temp = inputNameLength + nameDisplayAddress;
+<asm>
+Store     StoreToRegisterLocation     0 15 0					// Store char to second line of display
+</asm>
+temp = displayCommandBufferAddress;
+<asm>
+ALU       SetLiteral                  1  0 0					// Set the screen refresh command into register 1
+Store     StoreToRegisterLocation     0  1 0					// Write refresh command to display command buffer.
+</asm>
+temp = inputNameLength + RAMStartAddress + stringPosOffset;
+<asm>
+Store     StoreToRegisterLocation     0 15 0					// Store character into RAM
+ALU       SetLiteral                 15  0 0					// Re-set character register
+</asm>
+inputNameLength = inputNameLength + 1;
+temp = Tag(TestKeyPressed);
+<asm>
+Branch    JumpRegister				  0  0 0					// Loop back and wait for next character
+</asm>
+
+Tag(DrawResponse);
+displayIndex = 158;
+stringAddress = Tag(NiceToMeetYou);
+returnAddress = Tag(WriteName);
+charsToWrite = 21;
+temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
+<asm>
+Branch    JumpRegister                0  0 0  					// Jump to string writing function
+</asm>
+
+Tag(WriteName);
+// Draw name string.  Dynamic string drawing based on user input, shiny!
+displayIndex = 180;
+stringAddress = RAMStartAddress + stringPosOffset;
+charsToWrite = inputNameLength;
+returnAddress = Tag(WriteSecondQuery);
+temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
+<asm>
+Branch    JumpRegister                0  0 0  					// Jump to string writing function
+</asm>
+
+Tag(WriteSecondQuery);
+displayIndex = 237;
+stringAddress = Tag(Hows);
+returnAddress = Tag(LoadFromSSD);
+charsToWrite = 5;
+temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
+<asm>
+Branch    JumpRegister                0  0 0  					// Jump to string writing function
+</asm>
+
+int' ssdBlockAddress;
+int' ssdDataAddress;
+Tag(LoadFromSSD);
+ssdBlockAddress = 134221317;
+ssdDataAddress = 134221318;
+int charsLoaded;
+temp = ssdBlockAddress;
+<asm>
+// Load name from ssd
+ALU       SetLiteral                  1  0 20					// Set the block we want into register 1
+ALU       SetLiteral                  7  0 0					// Set register 7 to null
+Store     StoreToRegisterLocation     0  1 0					// Set storage to address in register 1
+</asm>
+Tag(LoadCharFromSSD);
+temp = ssdDataAddress;
+<asm>
+Load      LoadFromRegisterLocation    3  0 0					// Load a value from SSD into register 3
+</asm>
+temp = RAMStartAddress + inputNameLength + charsLoaded;
+<asm>
+Store     StoreToRegisterLocation     0  3 0					// Store value to location in RAM
+</asm>
+charsLoaded = charsLoaded + 1;
+temp = Tag(LoadCharFromSSD);
+<asm>
+Branch    JumpNotEqualRegister		  3  7 0					// Jump back for the next character if current one not null
+</asm>
+
+// Write second name to display
+displayIndex = 243;
+stringAddress = RAMStartAddress + inputNameLength;
+returnAddress = Tag(WriteQuestionMark);
+charsToWrite = charsLoaded;
+temp = Tag(WriteString);										// Will set the first instruction in the string writer into register 0
+<asm>
+Branch    JumpRegister                0  0 0  					// Jump to string writing function
+</asm>
+
+Tag(WriteQuestionMark);
+<asm>
+// Write question mark
+ALU       SetLiteral                  2  0 63					// Set register 2 to "?"
+</asm>
+temp = displayStartAddress + displayIndex + charsLoaded - 2;
+<asm>
+Store     StoreToRegisterLocation     0  2 0					// Write "?" to screen
+</asm>
+temp = displayCommandBufferAddress;
+<asm>
+ALU       SetLiteral                  1  0 0					// Set the screen refresh command into register 0
+Store     StoreToRegisterLocation     0  1 0					// Write refresh command to display command buffer.
+
+</asm>
+int charsWrittenToSSD;
+// Write current name to ssd
+temp = ssdBlockAddress;
+<asm>
+// Load name from ssd
+ALU       SetLiteral                  1  0 20					// Set the block we want into register 1
+Store     StoreToRegisterLocation    0  1 0						// Set storage to address in register 1
+</asm>
+Tag(WriteCharToSSD);
+temp = RAMStartAddress + charsWrittenToSSD + stringPosOffset;
+<asm>
+Load      LoadFromRegisterLocation    3  0 0					// Load char from RAM
+</asm>
+temp = ssdDataAddress;
+<asm>
+Store     StoreToRegisterLocation     0  3 0					// Store char to fifo
+</asm>
+
+charsWrittenToSSD = charsWrittenToSSD + 1;
+if(charsWrittenToSSD <= inputNameLength)
+{
+temp = Tag(WriteCharToSSD);
+<asm>
+Branch    JumpRegister				  0  0 0					// Loop back for next char
+</asm>
+}
+
+temp = ssdDataAddress;
+<asm>
+ALU       SetLiteral				  1  0 0					// Set r1 to null
+Store     StoreToRegisterLocation     0  1 0					// Send a terminating null
+</asm>
+temp = ssdBlockAddress;
+<asm>
+Store     StoreToRegisterLocation     0  1 0					// Flush the block
+
+// Data section
+</asm>
+Tag(hello);
+<asm>
+// hello, what's your name?
+Data 0x00000068
+Data 0x00000065
+Data 0x0000006c
+Data 0x0000006c
+Data 0x0000006f
+Data 0x0000002c
+
+Data 0x00000020
+Data 0x00000077
+Data 0x00000068
+Data 0x00000061
+Data 0x00000074
+Data 0x00000027
+Data 0x00000073
+
+Data 0x00000020
+Data 0x00000079
+Data 0x0000006f
+Data 0x00000075
+Data 0x00000072
+
+Data 0x00000020
+Data 0x0000006e
+Data 0x00000061
+Data 0x0000006d
+Data 0x00000065
+Data 0x0000003f
+
+</asm>
+Tag(NiceToMeetYou);
+<asm>
+// "It's nice to meet you "
+Data 0x00000049
+Data 0x00000074
+Data 0x00000027
+Data 0x00000073
+Data 0x00000020
+
+Data 0x0000006e
+Data 0x00000069
+Data 0x00000063
+Data 0x00000065
+Data 0x00000020
+
+Data 0x00000074
+Data 0x0000006f
+Data 0x00000020
+
+Data 0x0000006d
+Data 0x00000065
+Data 0x00000065
+Data 0x00000074
+Data 0x00000020
+
+Data 0x00000079
+Data 0x0000006f
+Data 0x00000075
+
+</asm>
+Tag(Hows);
+<asm>
+// "how's"
+Data 0x00000068
+Data 0x0000006f
+Data 0x00000077
+Data 0x00000027
+Data 0x00000073
+</asm>
+}
