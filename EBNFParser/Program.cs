@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace EBNFParser
 {
@@ -19,9 +20,24 @@ namespace EBNFParser
 
             var parser = root.ParserFactory(text);
 
-            if(root.Logger.Messages.Any())
+            var terminalStringBuilder = new StringBuilder("let patterns = [");
+
+            foreach(var element in parser.Terminals)
             {
-                Console.ReadLine();
+                terminalStringBuilder.Append("Regex(\"^");
+                terminalStringBuilder.Append(element.Name);
+                terminalStringBuilder.Append("\"); ");
+            }
+
+            terminalStringBuilder.Append("]");
+
+            using(var writer = new StreamWriter(args[0]))
+            {
+                writer.WriteLine("module Terminals");
+                writer.WriteLine();
+                writer.WriteLine("open System.Text.RegularExpressions");
+                writer.WriteLine();
+                writer.WriteLine(terminalStringBuilder.ToString());
             }
         }
     }

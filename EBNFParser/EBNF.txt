@@ -1,5 +1,5 @@
 Program ==> CodeBlock
-CodeBlock ==> OpenPeren { Statement } ClosePeren
+CodeBlock ==> OpenBrace { Statement } CloseBrace
 Statement ==> Declaration | Assignment | ASM | Conditional
 Declaration ==> IntDeclaration | BoolDeclaration
 IntDeclaration ==> ^int$ {^'$} Label ^;$
@@ -9,7 +9,7 @@ IntAssignment ==> Label ^=$ IntExpression ^;$
 BoolAssignment ==> Label ^=$ BoolExpression ^;$
 IntExpression ==> Primitive {BinaryOperator Primitive}
 Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label
-BinaryOperator ==> ^+$ | ^-$ | ^*$ | ^/$
+BinaryOperator ==> ^\+$ | ^-$ | ^\*$ | ^/$
 UnaryOperator ==> ^-$
 BooleanValue ==> ^true$ | ^false$
 BoolExpression ==> BoolSubExpression { BooleanConjunction BoolSubExpression }
@@ -17,9 +17,11 @@ BoolSubExpression ==> BooleanValue | Primitive BooleanOperator Primitive | OpenP
 BooleanOperator ==> ^==$ | ^!=$ | ^>$ | ^<$ | ^>=$ | ^<=$
 BooleanConjunction ==> ^&&$ | ^||$
 Conditional ==> ^if$ OpenPeren BoolExpression ClosePeren CodeBlock
-OpenPeren ==> ^($
-ClosePeren ==> ^)$
+OpenPeren ==> ^\($
+ClosePeren ==> ^\)$
+OpenBrace ==> ^{$
+CloseBrace ==> ^}$
 Label ==> ^[a-zA-Z_][\w_-]*$
-Integer ==> ^[0-9]+$
-ASM ==> ^<ASM>$ ASMContent ^</ASM>$
-ASMContent ==> ^((?!</ASM>).)*$
+Integer ==> ^[0-9]+$ | ^0x[0-9]+$
+ASM ==> ^<asm>$ ^</asm>$
+Comment ==> ^//$
