@@ -2,11 +2,11 @@ Program ==> CodeBlock
 CodeBlock ==> OpenBrace { Statement } CloseBrace
 Statement ==> Declaration | Assignment | ASM | Conditional
 Declaration ==> IntDeclaration | BoolDeclaration
-IntDeclaration ==> ^int$ {^'$} Label ^;$
-BoolDeclaration ==> ^bool$ {^'$} Label ^;$
+IntDeclaration ==> Int Apostrophe Label SemiColon
+BoolDeclaration ==> Bool Apostrophe Label SemiColon
 Assignment ==> IntAssignment | BoolAssignment
-IntAssignment ==> Label ^=$ IntExpression ^;$
-BoolAssignment ==> Label ^=$ BoolExpression ^;$
+IntAssignment ==> Label SingleEquals IntExpression SemiColon
+BoolAssignment ==> Label SingleEquals BoolExpression SemiColon
 IntExpression ==> Primitive {BinaryOperator Primitive}
 Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label
 BinaryOperator ==> ^\+$ | ^-$ | ^\*$ | ^/$
@@ -25,3 +25,8 @@ Label ==> ^[a-zA-Z_][\w_-]*$
 Integer ==> ^[0-9]+$ | ^0x[0-9A-Fa-f]+$
 ASM ==> ^(?s)<asm>(.*?)</asm>$
 Comment ==> ^(//).+$
+SemiColon ==> ^;$
+Apostrophe ==> ^'$
+SingleEquals ==> ^=$
+Int ==> ^int$
+Bool ==> ^bool$
