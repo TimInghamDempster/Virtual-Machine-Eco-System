@@ -9,16 +9,16 @@ namespace EBNFParser
         Repeat
     }
 
-    public class ElementComparer : IEqualityComparer<GrammarElement>
+    public class ElementComparer : IEqualityComparer<(ProductionRule rule, GrammarElement elm)>
     {
-        public bool Equals(GrammarElement x, GrammarElement y)
+        public bool Equals((ProductionRule rule, GrammarElement elm) x, (ProductionRule rule, GrammarElement elm) y)
         {
-            return (x.Name == y.Name) && (x.Type == y.Type);
+            return (x.elm.Name == y.elm.Name) && (x.elm.Type == y.elm.Type);
         }
 
-        public int GetHashCode(GrammarElement elm)
+        public int GetHashCode((ProductionRule rule, GrammarElement elm) tuple)
         {
-            return elm.Name.GetHashCode() ^ elm.Type.GetHashCode();
+            return tuple.elm.Name.GetHashCode() ^ tuple.elm.Type.GetHashCode();
         }
     }
 

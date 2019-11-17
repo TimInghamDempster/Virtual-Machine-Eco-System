@@ -2,11 +2,16 @@
 
 open System
 
+let tupleToString (tuple: string*string) =
+    fst tuple + ":" + snd tuple + "\n"
+
 [<EntryPoint>]
 let main argv =
     let source = ReadSource.sourceCode argv.[0]
     let tokenList = Lexer.tokens source 0
-    let tokens =
-        List.reduce (+) tokenList
+    let tokenStringList =
+        List.map tupleToString tokenList
+    let tokens = 
+        List.reduce (+) tokenStringList
     printfn "%s" tokens
     0 // return an integer exit code

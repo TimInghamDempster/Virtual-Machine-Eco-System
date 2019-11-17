@@ -20,13 +20,16 @@ namespace EBNFParser
 
             var parser = root.ParserFactory(text);
 
-            var terminalStringBuilder = new StringBuilder("let patterns = [");
+            var terminalStringBuilder = new StringBuilder("let patterns = [\n");
 
-            foreach(var element in parser.Terminals)
+            foreach(var elementTuple in parser.Terminals)
             {
+                terminalStringBuilder.Append("    (\"");
+                terminalStringBuilder.Append(elementTuple.rule.Name);
+                terminalStringBuilder.Append("\", ");
                 terminalStringBuilder.Append("Regex(\"^");
-                terminalStringBuilder.Append(element.Name);
-                terminalStringBuilder.Append("\"); ");
+                terminalStringBuilder.Append(elementTuple.element.Name);
+                terminalStringBuilder.Append("\"));\n");
             }
 
             terminalStringBuilder.Append("]");

@@ -22,10 +22,10 @@ namespace EBNFParserTests
         {
             var parser = _root.ParserFactory(testGrammar);
 
-            parser.Terminals.Should().Contain((element) => element.Name == "c" && element.IsTerminal);
-            parser.Terminals.Should().Contain((element) => element.Name == "e" && element.IsTerminal);
-            parser.Terminals.Should().Contain((element) => element.Name == "f" && element.IsTerminal);
-            parser.Terminals.Should().OnlyContain((element) => element.IsTerminal);
+            parser.Terminals.Should().Contain((tuple) => tuple.element.Name == "c" && tuple.element.IsTerminal);
+            parser.Terminals.Should().Contain((tuple) => tuple.element.Name == "e" && tuple.element.IsTerminal);
+            parser.Terminals.Should().Contain((tuple) => tuple.element.Name == "f" && tuple.element.IsTerminal);
+            parser.Terminals.Should().OnlyContain((tuple) => tuple.element.IsTerminal);
         }
 
         [Fact]

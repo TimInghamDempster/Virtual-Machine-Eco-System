@@ -25,8 +25,9 @@ namespace EBNFParser
 
         public ILogger Logger;
 
-        public IEnumerable<GrammarElement> Terminals =>
-            _patterns.SelectMany(p => p.Terminals);
+        public IEnumerable<(ProductionRule, GrammarElement)> Terminals =>
+            _patterns.SelectMany(p => p.Terminals).
+            Select(elm => (this, elm));
 
         public string Name { get; } = "";
 

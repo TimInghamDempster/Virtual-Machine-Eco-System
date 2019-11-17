@@ -2,20 +2,24 @@
 
 open System.Text.RegularExpressions
 
-let longer (a : string) (b : string) =
-    if(b.Length > a.Length) then b else a
+let getLen (tuple: (string*string)) =
+    let secondString = snd tuple
+    secondString.Length
+
+let longer (a : (string*string)) (b : (string*string)) =
+    if(getLen b > getLen a) then b else a
 
 let nextToken (source : string) index = 
     let subSource = source.Substring(index)
-    let rMatch (regex : Regex) = 
+    let rMatch (name: string, regex : Regex) = 
         let m = regex.Match (subSource)
-        m.Value + "\n"
+        (name, m.Value)
     let matches =
         List.map rMatch Terminals.patterns 
     let filteredMatches =
-        List.filter (fun m -> not(System.String.Equals(m,"\n"))) matches
+        List.filter (fun m -> not(System.String.Equals(snd m,""))) matches
     if filteredMatches.IsEmpty
-        then "\n"
+        then ("", "")
     else
         List.reduce longer filteredMatches 
 
@@ -25,7 +29,7 @@ let rec tokens source index =
         else
             let token = nextToken source index
             match token with
-            |"\n" -> tokens source (index + token.Length)
-            |_ -> token :: tokens source (index + token.Length - 1)
+            |("", "") -> tokens source (index + 1)
+            |_ -> token :: tokens source (index + getLen token)
    
     
