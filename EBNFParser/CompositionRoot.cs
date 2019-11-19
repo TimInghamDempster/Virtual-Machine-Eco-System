@@ -4,7 +4,12 @@ namespace EBNFParser
 {
     public class CompositionRoot
     {
-        public ILogger Logger {get; protected set;} = new ConsoleLogger();
+        public CompositionRoot(bool shushed)
+        {
+            Logger = new ConsoleLogger(shushed);
+        }
+
+        public ILogger Logger {get; protected set;}
 
         public Func<string, GrammarParser> ParserFactory =>
             (textToParse) => new GrammarParser(textToParse, ProductionRuleFactory, Logger);

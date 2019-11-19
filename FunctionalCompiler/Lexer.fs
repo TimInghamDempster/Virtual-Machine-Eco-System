@@ -2,24 +2,22 @@
 
 open System.Text.RegularExpressions
 
-let getLen (tuple: (string*string)) =
-    let secondString = snd tuple
-    secondString.Length
+type token = {_tokenType: Tokens.TokenTypes; _content: string}
 
-let longer (a : (string*string)) (b : (string*string)) =
-    if(getLen b > getLen a) then b else a
+let longer (a : token) (b : token) =
+    if(b._content.Length > a._content.Length) then b else a
 
 let nextToken (source : string) index = 
     let subSource = source.Substring(index)
-    let rMatch (name: string, regex : Regex) = 
+    let rMatch (tokenType: Tokens.TokenTypes, regex : Regex) = 
         let m = regex.Match (subSource)
-        (name, m.Value)
+        {_tokenType = tokenType; _content = m.Value}
     let matches =
-        List.map rMatch Terminals.patterns 
+        List.map rMatch Tokens.patterns 
     let filteredMatches =
-        List.filter (fun m -> not(System.String.Equals(snd m,""))) matches
+        List.filter (fun token -> not(System.String.Equals(token._content,""))) matches
     if filteredMatches.IsEmpty
-        then ("", "")
+        then {_tokenType =Tokens.TokenTypes.Invalid; _content = ""}
     else
         List.reduce longer filteredMatches 
 
@@ -28,8 +26,8 @@ let rec tokens source index =
         then  []
         else
             let token = nextToken source index
-            match token with
-            |("", "") -> tokens source (index + 1)
-            |_ -> token :: tokens source (index + getLen token)
+            match token._tokenType with
+            | Tokens.TokenTypes.Invalid -> tokens source (index + 1)
+            | _ -> token :: tokens source (index + token._content.Length)
    
     

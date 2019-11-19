@@ -2,8 +2,8 @@
 
 open System
 
-let tupleToString (tuple: string*string) =
-    fst tuple + ":" + snd tuple + "\n"
+let tupleToString (token: Lexer.token) =
+    token._tokenType.ToString() + ":\n" + token._content + "\n"
 
 [<EntryPoint>]
 let main argv =

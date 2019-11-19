@@ -37,14 +37,14 @@ namespace EBNFParser
             _patternFactory = patternFactory;
             Logger = logger;
 
-            logger.Log($"Parsing rule {_ruleString}");
+            logger.Log($"Parsing rule {_ruleString}", LogLevel.Info);
 
             const int rulePartsCount = 2; // name, rule
             var parts = line.Split("==>");
 
             if (parts.Length != rulePartsCount)
             {
-                logger.Log($"Production rule {line} does not contain a separator");
+                logger.Log($"Production rule {line} does not contain a separator", LogLevel.Error);
                 return;
             }
 
@@ -52,7 +52,7 @@ namespace EBNFParser
 
             if(Name == "")
             {
-                logger.Log($"Error: production rule {line} does not have a name");
+                logger.Log($"Error: production rule {line} does not have a name", LogLevel.Error);
             }
 
             foreach(var character in parts[1])
@@ -91,7 +91,7 @@ namespace EBNFParser
             switch(character)
             {
                 case '|':
-                    Logger.Log($"Error: Pattern in rule {_ruleString} starts with a | which is not legal");
+                    Logger.Log($"Error: Pattern in rule {_ruleString} starts with a | which is not legal", LogLevel.Error);
                     break;
                 case ' ':
                     break;

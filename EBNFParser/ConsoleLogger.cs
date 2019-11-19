@@ -7,9 +7,19 @@ namespace EBNFParser
     public class ConsoleLogger : ILogger
     {
         private readonly List<string> _messages = new List<string>();
-        public void Log(string message)
+        private readonly bool _isShushed;
+
+        public ConsoleLogger(bool isShushed)
         {
-            Console.WriteLine(message);
+            _isShushed = isShushed;
+        }
+
+        public void Log(string message, LogLevel level)
+        {
+            if (!_isShushed || level == LogLevel.Error)
+            {
+                Console.WriteLine(message);
+            }
             _messages.Add(message);
         }
 

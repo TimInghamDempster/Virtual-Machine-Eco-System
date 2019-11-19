@@ -25,7 +25,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EBNFParser", "..\EBNFParser
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EBNFParserTests", "..\EBNFParserTests\EBNFParserTests.csproj", "{71405D31-CEC2-400F-84AE-F81EFE05D545}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FunctionalCompiler", "..\FunctionalCompiler\FunctionalCompiler.fsproj", "{2CC9C99E-371D-4CE6-A651-EEB161446B3B}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FunctionalCompiler", "..\FunctionalCompiler\FunctionalCompiler.fsproj", "{2CC9C99E-371D-4CE6-A651-EEB161446B3B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C1954D08-FA74-415F-A1EC-694EAE9A6067} = {C1954D08-FA74-415F-A1EC-694EAE9A6067}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

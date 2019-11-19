@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace EBNFParser
 {
@@ -20,6 +22,45 @@ namespace EBNFParser
             VerifyGrammarIsNotLeftRecursive(logger);
         }
 
+        // Generate the f# token types and regexes needed by
+        // a lexer for this grammar and write them into a file
+        public void GenerateLexerCode(string path)
+        {
+            var terminalStringBuilder = new StringBuilder("let patterns = [\n");
+            var tokenEnumBuilder = new StringBuilder("type TokenTypes =\n");
+            var accountedForTokens = new HashSet<string>();
+
+            int index = 0;
+            foreach (var elementTuple in Terminals)
+            {
+                var tokenType = elementTuple.rule.Name;
+                var tokenPattern = elementTuple.element.Name;
+                terminalStringBuilder.Append($"    (TokenTypes.{tokenType}, Regex(\"^{tokenPattern}\"));\n");
+
+                if (!accountedForTokens.Contains(tokenType))
+                {
+                    tokenEnumBuilder.Append($"    | {tokenType} = {index}\n");
+                    accountedForTokens.Add(tokenType);
+                    index++;
+                }
+            }
+
+            terminalStringBuilder.Append("]");
+
+            tokenEnumBuilder.Append($"    | Invalid = {index}\n");
+
+            using (var writer = new StreamWriter(path))
+            {
+                writer.WriteLine("module Tokens");
+                writer.WriteLine();
+                writer.WriteLine("open System.Text.RegularExpressions");
+                writer.WriteLine();
+                writer.WriteLine(tokenEnumBuilder.ToString());
+                writer.WriteLine();
+                writer.WriteLine(terminalStringBuilder.ToString());
+            }
+        }
+
         private void VerifyGrammarIsNotLeftRecursive(ILogger logger)
         {
             foreach(var rule in _productionRules)
@@ -27,7 +68,7 @@ namespace EBNFParser
                 var finalRule = FindPath(rule, rule);
                 if (finalRule != null)
                 {
-                    logger.Log($"Error: rule {rule.Name} is left-recursive via rule {finalRule}");
+                    logger.Log($"Error: rule {rule.Name} is left-recursive via rule {finalRule}", LogLevel.Error);
                 }
             }
         }
@@ -105,7 +146,7 @@ namespace EBNFParser
             {
                 if(!definedRules.Contains(requiredRule.Item2))
                 {
-                    logger.Log($"Error rule {requiredRule.Item2} is referenced in a pattern in rule {requiredRule.Item1} but not defined");
+                    logger.Log($"Error rule {requiredRule.Item2} is referenced in a pattern in rule {requiredRule.Item1} but not defined", LogLevel.Error);
                 }
             }
         }

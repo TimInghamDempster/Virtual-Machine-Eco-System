@@ -81,12 +81,12 @@ namespace EBNFParser
 
             if(_currentState == State.ProcessingTerminal)
             {
-                _logger.Log($"Error: terminal not closed at end of pattern {text}");
+                _logger.Log($"Error: terminal not closed at end of pattern {text}", LogLevel.Error);
             }
 
             if (_currentState == State.ProcessingRepeat)
             {
-                _logger.Log($"Error: repeat not closed at end of pattern {text}");
+                _logger.Log($"Error: repeat not closed at end of pattern {text}", LogLevel.Error);
             }
 
             if(_currentState == State.ProcessingRule)
@@ -144,7 +144,7 @@ namespace EBNFParser
                     break;
                 case '}':
                     Reset();
-                    _logger.Log($"Error: attempted to close a reapeat that does not exist in pattern {_patternString}");
+                    _logger.Log($"Error: attempted to close a reapeat that does not exist in pattern {_patternString}", LogLevel.Error);
                     break;
                 default:
                     _currentString.Append(character);
@@ -161,7 +161,7 @@ namespace EBNFParser
             else
             {
                 Reset();
-                _logger.Log($"Error: repeat sequences cannot be nested, atempted repeat {_patternString}");
+                _logger.Log($"Error: repeat sequences cannot be nested, atempted repeat {_patternString}", LogLevel.Error);
             }
         }
 
@@ -193,7 +193,7 @@ namespace EBNFParser
                     break;
                 case '}':
                     _currentState = State.Initialising;
-                    _logger.Log("Error: first character in pattern cannot end a repeat");
+                    _logger.Log("Error: first character in pattern cannot end a repeat", LogLevel.Error);
                     break;
                 case ' ':
                     break;
