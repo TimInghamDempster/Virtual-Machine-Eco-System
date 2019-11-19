@@ -20,46 +20,7 @@ namespace EBNFParser
             VerifyAllRulesPresent(logger);
 
             VerifyGrammarIsNotLeftRecursive(logger);
-        }
-
-        // Generate the f# token types and regexes needed by
-        // a lexer for this grammar and write them into a file
-        public void GenerateLexerCode(string path)
-        {
-            var terminalStringBuilder = new StringBuilder("let patterns = [\n");
-            var tokenEnumBuilder = new StringBuilder("type TokenTypes =\n");
-            var accountedForTokens = new HashSet<string>();
-
-            int index = 0;
-            foreach (var elementTuple in Terminals)
-            {
-                var tokenType = elementTuple.rule.Name;
-                var tokenPattern = elementTuple.element.Name;
-                terminalStringBuilder.Append($"    (TokenTypes.{tokenType}, Regex(\"^{tokenPattern}\"));\n");
-
-                if (!accountedForTokens.Contains(tokenType))
-                {
-                    tokenEnumBuilder.Append($"    | {tokenType} = {index}\n");
-                    accountedForTokens.Add(tokenType);
-                    index++;
-                }
-            }
-
-            terminalStringBuilder.Append("]");
-
-            tokenEnumBuilder.Append($"    | Invalid = {index}\n");
-
-            using (var writer = new StreamWriter(path))
-            {
-                writer.WriteLine("module Tokens");
-                writer.WriteLine();
-                writer.WriteLine("open System.Text.RegularExpressions");
-                writer.WriteLine();
-                writer.WriteLine(tokenEnumBuilder.ToString());
-                writer.WriteLine();
-                writer.WriteLine(terminalStringBuilder.ToString());
-            }
-        }
+        }        
 
         private void VerifyGrammarIsNotLeftRecursive(ILogger logger)
         {

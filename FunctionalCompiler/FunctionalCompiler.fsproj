@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Parser.fs" />
     <Compile Include="Tokens.fs" />
     <None Include="EBNF.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -16,7 +17,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet &quot;$(SolutionDir)\..\EBNFParser\bin\Debug\netcoreapp2.1\EBNFParser.dll&quot; &quot;$(SolutionDir)/../FunctionalCompiler/Tokens.fs&quot; /s" />
+    <Exec Command="dotnet &quot;$(SolutionDir)\..\EBNFParser\bin\Debug\netcoreapp2.1\EBNFParser.dll&quot; &quot;$(SolutionDir)/../FunctionalCompiler/Tokens.fs&quot; &quot;$(SolutionDir)/../FunctionalCompiler/Parser.fs&quot; /s" />
   </Target>
 
 </Project>

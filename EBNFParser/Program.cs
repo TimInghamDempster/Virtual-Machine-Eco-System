@@ -19,7 +19,11 @@ namespace EBNFParser
             var root = new CompositionRoot(shushed);
 
             var parser = root.ParserFactory(text);
-            parser.GenerateLexerCode(args[0]);
+
+            var compilerGenerator = root.GeneratorFactory(parser);
+
+            compilerGenerator.GenerateLexerCode(args[0]);
+            compilerGenerator.GenerateParser(args[1]);
         }
     }
 }

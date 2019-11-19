@@ -14,6 +14,9 @@ namespace EBNFParser
         public Func<string, GrammarParser> ParserFactory =>
             (textToParse) => new GrammarParser(textToParse, ProductionRuleFactory, Logger);
 
+        public Func<GrammarParser, CompilerGenerator> GeneratorFactory =>
+            (grammar) => new CompilerGenerator(grammar);
+
         public Func<string, ProductionRule> ProductionRuleFactory =>
             (productionRuleString) => new ProductionRule(productionRuleString, NormalPatternFactory, Logger);
 
