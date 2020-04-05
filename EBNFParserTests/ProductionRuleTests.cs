@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Xunit;
 using System.Linq;
+using System;
 
 namespace EBNFParserTests
 {
@@ -68,6 +69,12 @@ namespace EBNFParserTests
             var productionRule = _root.ProductionRuleFactory(_testRule);
 
             _root.Logger.Messages.Should().Contain(msg => msg.Contains(_testRule));
+        }
+
+        [Fact]
+        public void TerminalRulesMustHaveNoOtherContent()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -7,7 +7,7 @@ namespace EBNFParserTests
     {
         private readonly List<string> _messages = new List<string>();
         public  IEnumerable<string> Messages => _messages;
-        public void Log(string message)
+        public void Log(string message, LogLevel level)
         {
             _messages.Add(message);
         }

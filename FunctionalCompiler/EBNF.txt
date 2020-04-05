@@ -1,32 +1,51 @@
 Program ==> CodeBlock
-CodeBlock ==> OpenBrace { Statement } CloseBrace
-Statement ==> Declaration | Assignment | ASM | Conditional
+CodeBlock ==> OpenBrace {Statement} CloseBrace
+Statement ==> Declaration | Assignment | ASM | Conditional | Tag Semicolon | Comment
 Declaration ==> IntDeclaration | BoolDeclaration
-IntDeclaration ==> Int Apostrophe Label SemiColon
-BoolDeclaration ==> Bool Apostrophe Label SemiColon
+IntDeclaration ==> Int {Uninitialized} Label Semicolon
+BoolDeclaration ==> Bool {Uninitialized} Label Semicolon
 Assignment ==> IntAssignment | BoolAssignment
-IntAssignment ==> Label SingleEquals IntExpression SemiColon
-BoolAssignment ==> Label SingleEquals BoolExpression SemiColon
+IntAssignment ==> Label AssignmentToken IntExpression Semicolon
+BoolAssignment ==> Label AssignmentToken BoolExpression Semicolon
 IntExpression ==> Primitive {BinaryOperator Primitive}
-Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label
-BinaryOperator ==> ^\+$ | ^-$ | ^\*$ | ^/$
-UnaryOperator ==> ^-$
-BooleanValue ==> ^true$ | ^false$
-BoolExpression ==> BoolSubExpression { BooleanConjunction BoolSubExpression }
+Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label | Tag
+Tag ==> TagMarker OpenPeren Label ClosePeren
+TagMarker ==> ^Tag$
+BinaryOperator ==> Plus | Minus | Mul | Div
+UnaryOperator ==> Minus
+BooleanValue ==> True | False
+BoolExpression ==> BoolSubExpression {BooleanConjunction BoolSubExpression}
 BoolSubExpression ==> BooleanValue | Primitive BooleanOperator Primitive | OpenPeren BoolExpression ClosePeren
-BooleanOperator ==> ^==$ | ^!=$ | ^>$ | ^<$ | ^>=$ | ^<=$
-BooleanConjunction ==> ^&&$ | ^||$
-Conditional ==> ^if$ OpenPeren BoolExpression ClosePeren CodeBlock
+BooleanOperator ==> Equality | Inequality | Greater | Less | GreaterEquals | LessEquals
+BooleanConjunction ==> LogicalAnd | LogicalOr
+Conditional ==> If OpenPeren BoolExpression ClosePeren CodeBlock
 OpenPeren ==> ^\($
 ClosePeren ==> ^\)$
 OpenBrace ==> ^{$
 CloseBrace ==> ^}$
-Label ==> ^[a-zA-Z_][\w_-]*$
-Integer ==> ^[0-9]+$ | ^0x[0-9A-Fa-f]+$
-ASM ==> ^(?s)<asm>(.*?)</asm>$
-Comment ==> ^(//).+$
-SemiColon ==> ^;$
-Apostrophe ==> ^'$
-SingleEquals ==> ^=$
+Integer ==> DecimalInteger | HexInteger
+DecimalInteger ==> ^[0-9]+$
+HexInteger ==> ^0x[0-9]+$
+ASM ==> ^<asm>$
+Comment ==> ^//$
+Semicolon ==> ^;$
+AssignmentToken ==> ^=$
+Uninitialized ==> ^'$
 Int ==> ^int$
 Bool ==> ^bool$
+Plus ==> ^\+$
+Minus ==> ^-$
+Mul ==> ^\*$
+Div ==> ^/$
+True ==> ^true$
+False ==> ^false$
+Equality ==>  ^==$
+Inequality ==> ^!=$
+Greater ==> ^>$
+Less ==> ^<$
+GreaterEquals ==> ^>=$
+LessEquals ==> ^<=$
+LogicalAnd ==> ^&&$
+LogicalOr ==> ^||$
+If ==> ^if$
+Label ==> ^[a-zA-Z_][\w_-]*$

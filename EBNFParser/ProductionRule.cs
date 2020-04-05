@@ -21,7 +21,7 @@ namespace EBNFParser
 
         private readonly Func<string, Pattern> _patternFactory;
         private readonly List<Pattern> _patterns = new List<Pattern>();
-        public IEnumerable<Pattern> Patterns => _patterns;
+        public IList<Pattern> Patterns => _patterns;
 
         public ILogger Logger;
 

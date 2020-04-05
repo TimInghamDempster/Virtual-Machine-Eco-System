@@ -112,13 +112,13 @@ namespace EBNFParser
             }
         }
 
-        private  readonly  List<ProductionRule> _productionRules = new List<ProductionRule>();
+        private readonly List<ProductionRule> _productionRules = new List<ProductionRule>();
 
         public IEnumerable<(ProductionRule rule, GrammarElement element)> Terminals => 
             _productionRules.
             SelectMany(rule => rule.Terminals).
             Distinct(new ElementComparer());
         
-        public IEnumerable<ProductionRule> ProductionRules => _productionRules;
+        public IList<ProductionRule> ProductionRules => _productionRules;
     }
 }
