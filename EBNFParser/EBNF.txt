@@ -1,6 +1,6 @@
 Program ==> CodeBlock
 CodeBlock ==> OpenBrace {Statement} CloseBrace
-Statement ==> Declaration | Assignment | ASM | Conditional
+Statement ==> Declaration | Assignment | ASM | Conditional | Tag Semicolon | Comment
 Declaration ==> IntDeclaration | BoolDeclaration
 IntDeclaration ==> Int {Uninitialized} Label Semicolon
 BoolDeclaration ==> Bool {Uninitialized} Label Semicolon
@@ -8,7 +8,9 @@ Assignment ==> IntAssignment | BoolAssignment
 IntAssignment ==> Label AssignmentToken IntExpression Semicolon
 BoolAssignment ==> Label AssignmentToken BoolExpression Semicolon
 IntExpression ==> Primitive {BinaryOperator Primitive}
-Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label
+Primitive ==> Integer | OpenPeren IntExpression ClosePeren | UnaryOperator Primitive | Label | Tag
+Tag ==> TagMarker OpenPeren Label ClosePeren
+TagMarker ==> ^Tag$
 BinaryOperator ==> Plus | Minus | Mul | Div
 UnaryOperator ==> Minus
 BooleanValue ==> True | False
@@ -21,9 +23,10 @@ OpenPeren ==> ^\($
 ClosePeren ==> ^\)$
 OpenBrace ==> ^{$
 CloseBrace ==> ^}$
-Label ==> ^[a-zA-Z_][\w_-]*$
-Integer ==> ^[0-9]+$ | ^0x[0-9]+$
-ASM ==> ^<asm>$ ^</asm>$
+Integer ==> DecimalInteger | HexInteger
+DecimalInteger ==> ^[0-9]+$
+HexInteger ==> ^0x[0-9]+$
+ASM ==> ^<asm>$
 Comment ==> ^//$
 Semicolon ==> ^;$
 AssignmentToken ==> ^=$
@@ -45,3 +48,4 @@ LessEquals ==> ^<=$
 LogicalAnd ==> ^&&$
 LogicalOr ==> ^||$
 If ==> ^if$
+Label ==> ^[a-zA-Z_][\w_-]*$
