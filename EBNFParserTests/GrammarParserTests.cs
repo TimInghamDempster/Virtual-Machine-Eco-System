@@ -41,11 +41,12 @@ namespace EBNFParserTests
         [Fact]
         public void NonLeftRecursionIsAllowed()
         {
-            const int numberOfRules = 3;
-            var recursiveGrammar = "a ==> b\nb==>^c$\nc ==> ^e$ a | ^f$";
+            const int numberOfRules = 5;
+            var recursiveGrammar = "a ==> b\nb==>c\nc ==> e a | f\ne ==> ^e$\nf ==> ^f$";
             var parser = _root.ParserFactory(recursiveGrammar);
 
             _root.Logger.Messages.Count().Should().Be(numberOfRules);
+            _root.Logger.Messages.Should().OnlyContain(s => s.StartsWith("Parsing rule"));
         }
 
         [Fact]

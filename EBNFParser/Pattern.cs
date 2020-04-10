@@ -93,6 +93,11 @@ namespace EBNFParser
             {
                 _elements.Add(_ruleFactory(_currentString.ToString()));
             }
+
+            if (_elements.Any(elm => elm.IsTerminal) && _elements.Count > 1)
+            {
+                _logger.Log($"Error: pattern {text} contains a terminal, it should not contain any other elements", LogLevel.Error);
+            }
         }
 
         private void ProcessChar(char character)

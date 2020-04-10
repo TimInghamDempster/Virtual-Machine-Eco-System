@@ -72,9 +72,11 @@ namespace EBNFParserTests
         }
 
         [Fact]
-        public void TerminalRulesMustHaveNoOtherContent()
+        public void TerminalRulesMustHaveOnlyOnePattern()
         {
-            throw new NotImplementedException();
+            var badRule = "a ==> ^c$ | b";
+            var productionRule = _root.ProductionRuleFactory(badRule);
+            _root.Logger.Messages.Should().Contain(msg => msg.Contains("one pattern"));
         }
     }
 }

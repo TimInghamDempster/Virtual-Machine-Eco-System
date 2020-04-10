@@ -61,6 +61,11 @@ namespace EBNFParser
             }
 
             _patterns.Add(_patternFactory(_currentString.ToString()));
+
+            if(_patterns.Count > 1 && _patterns.Any(p => p.Terminals.Any()))
+            {
+                logger.Log($"Error: production rule {line} defines a terminal and so can only have one pattern", LogLevel.Error);
+            }
         }
 
         public override string ToString()

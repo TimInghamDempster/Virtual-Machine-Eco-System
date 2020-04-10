@@ -124,5 +124,15 @@ namespace EBNFParserTests
             var pattern = _root.NormalPatternFactory(text);
             pattern.Rules.Count().Should().Be(2);
         }
+
+        [Fact]
+        public void TerminalPatternMustOnlyBeTerminal()
+        {
+            var text = "^a$ b";
+
+            var pattern = _root.NormalPatternFactory(text);
+
+            _root.Logger.Messages.Should().Contain(msg => msg.Contains("other elements"));
+        }
     }
 }
