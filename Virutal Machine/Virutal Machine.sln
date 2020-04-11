@@ -30,6 +30,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FunctionalCompiler", "..\Fu
 		{C1954D08-FA74-415F-A1EC-694EAE9A6067} = {C1954D08-FA74-415F-A1EC-694EAE9A6067}
 	EndProjectSection
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FunctionalCompilerTests", "..\FunctionalCompilerTests\FunctionalCompilerTests.fsproj", "{8E208E39-9A23-45A3-90BC-40F4EAF26E95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -160,6 +162,18 @@ Global
 		{2CC9C99E-371D-4CE6-A651-EEB161446B3B}.Release|x64.Build.0 = Release|Any CPU
 		{2CC9C99E-371D-4CE6-A651-EEB161446B3B}.Release|x86.ActiveCfg = Release|Any CPU
 		{2CC9C99E-371D-4CE6-A651-EEB161446B3B}.Release|x86.Build.0 = Release|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Debug|x64.Build.0 = Debug|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Debug|x86.Build.0 = Debug|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Release|x64.ActiveCfg = Release|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Release|x64.Build.0 = Release|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Release|x86.ActiveCfg = Release|Any CPU
+		{8E208E39-9A23-45A3-90BC-40F4EAF26E95}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

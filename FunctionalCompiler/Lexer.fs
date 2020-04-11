@@ -3,9 +3,9 @@
 open System.Text.RegularExpressions
 open System
 
-type token = {_tokenType: Tokens.TokenTypes; _content: string}
+type token<'tokenTypeType> = {_tokenType: 'tokenTypeType; _content: string}
 
-let longer (a : token) (b : token) =
+let longer (a : token<_>) (b : token<_>) =
     if(b._content.Length > a._content.Length) then b else a
 
 let nextToken (source : string) index = 
